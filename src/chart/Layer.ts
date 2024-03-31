@@ -7,8 +7,9 @@ export class Layer extends Base {
   chart: Chart
   transform: Matrix
   mask: Base | null
+  alpha: number
 
-  constructor(chart: Chart, children: Base[] = [], transform?: Matrix, mask?: Base) {
+  constructor(chart: Chart, children: Base[] = [], transform?: Matrix, mask?: Base, alpha?: number) {
     super()
     this.chart = chart
     this.children = children
@@ -17,6 +18,7 @@ export class Layer extends Base {
     }
     this.transform = transform ?? TRANSFORM_EMPTY
     this.mask = mask ?? null
+    this.alpha = alpha ?? 1
   }
 
   add(node: Base) {
@@ -51,6 +53,8 @@ export class Layer extends Base {
     if (this.mask) {
       this.chart.pencil.mask(this.mask)
     }
+
+    this.chart.ctx.globalAlpha = this.chart.ctx.globalAlpha * this.alpha
 
     for (let j = 0; j < this.children.length; j++) {
       const node = this.children[j]

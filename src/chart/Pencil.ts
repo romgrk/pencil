@@ -45,6 +45,30 @@ export class Pencil {
     )
   }
 
+  beginPath() {
+    this.ctx.beginPath()
+  }
+
+  closePath() {
+    this.ctx.closePath()
+  }
+
+  stroke() {
+    this.ctx.stroke()
+  }
+
+  moveTo(x: number, y: number) {
+    this.ctx.moveTo(x, this.y(y))
+  }
+
+  bezierCurveTo(cp1X: number, cp1Y: number, cp2X: number, cp2Y: number, endX: number, endY: number) {
+    this.ctx.bezierCurveTo(
+      cp1X, this.y(cp1Y),
+      cp2X, this.y(cp2Y),
+      endX, this.y(endY),
+    )
+  }
+
   mask(mask: Base) {
     this.isMasking = true
     mask.render()
