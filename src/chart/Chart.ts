@@ -61,6 +61,13 @@ class DebugNode extends Node {
 class GridNode extends Node {
   static style = Style.from({ strokeStyle: colors.axisLine })
 
+  factor: number
+
+  constructor(chart: Chart) {
+    super(chart)
+    this.factor = 1
+  }
+
   render() {
     const { pencil } = this.chart
 
@@ -68,13 +75,13 @@ class GridNode extends Node {
     pencil.drawShape(
       new Segment(
         AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(0, this.chart.height - 2 * PADDING),
+        AXIS_ORIGIN.translate(0, this.factor * (this.chart.height - 2 * PADDING)),
       )
     )
     pencil.drawShape(
       new Segment(
         AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(this.chart.width - 2 * PADDING, 0),
+        AXIS_ORIGIN.translate(this.factor * (this.chart.width - 2 * PADDING), 0),
       )
     )
   }
@@ -221,7 +228,9 @@ export class Chart {
     this.layersByName = {}
 
     this.layersByName.content = new Layer(this, [], TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin))
-    this.layersByName.grid = new Layer(this, [new GridNode(this)])
+
+    const gridNode = new GridNode(this)
+    this.layersByName.grid = new Layer(this, [gridNode])
 
     const pathNode = new PathNode(this, this.dataset)
     this.layersByName.path = new Layer(this, [pathNode])
@@ -258,28 +267,34 @@ export class Chart {
         this.render()
       },
     })
-    behavior.activate()
+    behavior.enable()
 
     pathNode.shape = Path.EMPTY
     this.populateDataset(0, 0)
     this.render()
 
-    animate({
-      from: 0,
-      to: pathNode.fullShape.length,
-      duration: 1_000,
-      easing: Easing.EASE_IN_OUT,
-      onChange: (length, done) => {
-        if (done) {
-          pathNode.shape = pathNode.fullShape
-        } else {
-          pathNode.shape = pathNode.fullShape.slice(0, length)
-        }
-        this.render()
-      }
-    })
+    animate({ duration: 500, easing: Easing.EASE_IN_OUT, onChange: (f) => {
+      gridNode.factor = f
+      this.render()
+    }})
     .then(() =>
-      animate({ from: 0, to: 3, duration: 500, easing: Easing.LINEAR, onChange: (r) => {
+      animate({
+        from: 0,
+        to: pathNode.fullShape.length,
+        duration: 1_000,
+        easing: Easing.EASE_IN_OUT,
+        onChange: (length, done) => {
+          if (done) {
+            pathNode.shape = pathNode.fullShape
+          } else {
+            pathNode.shape = pathNode.fullShape.slice(0, length)
+          }
+          this.render()
+        }
+      })
+    )
+    .then(() =>
+      animate({ from: 0, to: 3, duration: 250, easing: Easing.LINEAR, onChange: (r) => {
         this.populateDataset(r, 0)
         this.render()
       }})

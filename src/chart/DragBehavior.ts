@@ -20,11 +20,11 @@ export class DragBehavior {
     this.options = options
   }
 
-  activate() {
+  enable() {
     this.chart.canvas.addEventListener('pointerdown', this.onDragStart)
   }
 
-  deactivate() {
+  disable() {
     this.chart.canvas.removeEventListener('pointerdown', this.onDragStart)
   }
 

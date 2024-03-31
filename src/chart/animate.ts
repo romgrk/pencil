@@ -10,8 +10,8 @@ export const Easing = {
 }
 
 type Options = {
-  from: number,
-  to: number,
+  from?: number,
+  to?: number,
   duration: number,
   delay?: number,
   easing?: EasingFn,
@@ -25,7 +25,7 @@ type Options = {
  * never call `options.onChange` with a value outside `options.to`.
  */
 export default function animate(options: Options) {
-  const { from, to, duration, delay = 0, onChange, easing = Easing.EASE_IN_OUT } = options
+  const { from = 0, to = 1, duration, delay = 0, onChange, easing = Easing.EASE_IN_OUT } = options
   const start = performance.now()
   let id = 0
 
