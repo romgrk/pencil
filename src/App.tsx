@@ -1,4 +1,3 @@
-import './App.css'
 import Chart from './chart/react'
 import { Dataset } from './chart/Dataset'
 import data from './grid-downloads.json'

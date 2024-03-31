@@ -18,6 +18,8 @@ type Options = {
   onChange: (value: number, done: boolean) => void,
 }
 
+type AnimatePromise = Promise<void> & { cancel: Function }
+
 /**
  * Animate a value using `requestAnimationFrame()`. This function does not
  * call `options.onChange` in the current event loop cycle. It is not guaranteed
@@ -29,11 +31,8 @@ export default function animate(options: Options) {
   const start = performance.now()
   let id = 0
 
-  let resolve: Function, reject: Function
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  }) as Promise<void> & { cancel: Function }
+  let resolve: Function
+  const promise = new Promise((_resolve) => { resolve = _resolve }) as AnimatePromise
 
   const step = (timestamp: number) => {
     const elapsed = timestamp - start - delay
@@ -49,10 +48,8 @@ export default function animate(options: Options) {
     }
   }
 
-  promise.cancel = () => {
-    cancelAnimationFrame(id)
-    reject()
-  }
+  promise.cancel = () => { cancelAnimationFrame(id) }
+
   id = requestAnimationFrame(step)
 
   return promise

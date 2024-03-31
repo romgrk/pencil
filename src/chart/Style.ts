@@ -58,7 +58,7 @@ export class Style {
     return style
   }
 
-  constructor(id: number, options: StyleOptions) {
+  private constructor(id: number, options: StyleOptions) {
     this.id = id
     this.options = options
   }

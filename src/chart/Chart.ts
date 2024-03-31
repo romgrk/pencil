@@ -59,7 +59,7 @@ class DebugNode extends Node {
   }
 }
 
-class GridNode extends Node {
+class AxisNode extends Node {
   static style = Style.from({ strokeStyle: colors.axisLine })
 
   factor: number
@@ -72,7 +72,7 @@ class GridNode extends Node {
   render() {
     const { pencil } = this.chart
 
-    pencil.style(GridNode.style)
+    pencil.style(AxisNode.style)
     pencil.drawShape(
       new Segment(
         AXIS_ORIGIN,
@@ -230,8 +230,8 @@ export class Chart {
 
     this.layersByName.content = new Layer(this, [], TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin))
 
-    const gridNode = new GridNode(this)
-    this.layersByName.grid = new Layer(this, [gridNode])
+    const axisNode = new AxisNode(this)
+    this.layersByName.axis = new Layer(this, [axisNode])
 
     const pathNode = new PathNode(this, this.dataset)
     this.layersByName.path = new Layer(this, [pathNode])
@@ -248,7 +248,7 @@ export class Chart {
     this.layersByName.content.add(this.layersByName.xLabels)
 
     this.layers.push(this.layersByName.content)
-    this.layers.push(this.layersByName.grid)
+    this.layers.push(this.layersByName.axis)
     this.layers.push(this.layersByName.debug)
 
     const drag = new DragBehavior(this, {
@@ -306,7 +306,7 @@ export class Chart {
     this.render()
 
     animate({ duration: 500, easing: Easing.EASE_IN_OUT, onChange: (f) => {
-      gridNode.factor = f
+      axisNode.factor = f
       this.render()
     }})
     .then(() =>
@@ -367,7 +367,7 @@ export class Chart {
         )
         lastLabelX = x + textNode.dimensions.width + 10
         xLabels.add(new Layer(this, [
-          new Node(this, new Segment(x, -5, x, 5), AXIS_TICK_STYLE),
+          new Node(this, new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
           textNode,
         ]))
       }
