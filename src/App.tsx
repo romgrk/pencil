@@ -1,4 +1,4 @@
-import Chart from './chart/react'
+import { LinearChart } from './chart/react'
 import { Dataset } from './chart/Dataset'
 import data from './grid-downloads.json'
 
@@ -33,7 +33,7 @@ const dataset = new Dataset(
 function App() {
   return (
     <div className='App'>
-      <Chart
+      <LinearChart
         width={800}
         height={500}
         dataset={dataset}

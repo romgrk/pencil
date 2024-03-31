@@ -1,14 +1,26 @@
 import { useEffect, useRef } from 'react'
-import Chart, { Options } from './Chart'
+import * as chart from './Chart'
+import * as linear from './LinearChart'
 
-type Props = Options
-
-export default function Component(props: Props) {
+export function Chart(props: chart.Options) {
   const domNode = useRef<HTMLDivElement>()
-  const instance = useRef<Chart>()
+  const instance = useRef<chart.Chart>()
 
   useEffect(() => {
-    instance.current = new Chart(domNode.current!, props)
+    instance.current = new chart.Chart(domNode.current!, props)
+  }, [])
+
+  return (
+    <div ref={domNode as any} />
+  )
+}
+
+export function LinearChart(props: linear.Options) {
+  const domNode = useRef<HTMLDivElement>()
+  const instance = useRef<linear.LinearChart>()
+
+  useEffect(() => {
+    instance.current = new linear.LinearChart(domNode.current!, props)
   }, [])
 
   return (
