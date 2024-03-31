@@ -22,18 +22,27 @@ export class DragBehavior {
 
   enable() {
     this.chart.canvas.addEventListener('pointerdown', this.onDragStart)
+    this.chart.canvas.addEventListener('touchstart',  this.onDragStart)
   }
 
   disable() {
     this.chart.canvas.removeEventListener('pointerdown', this.onDragStart)
+    this.chart.canvas.removeEventListener('touchstart',  this.onDragStart)
   }
 
   onDragStart = (event: PointerEvent | TouchEvent) => {
+    // Cancel the touchstart that comes after pointerdown
+    event.preventDefault()
+    if (this.start !== Point.EMPTY) {
+      return
+    }
     this.start = new Point(pointerX(event), pointerY(event))
     this.previous = this.start
+    console.log('START', event)
     document.addEventListener('pointermove', this.onDragMove)
     document.addEventListener('touchmove',   this.onDragMove)
     document.addEventListener('pointerup',   this.onDragEnd)
+    document.addEventListener('touchend',    this.onDragEnd)
     this.options.onStart?.(this.start)
   }
 
@@ -53,7 +62,10 @@ export class DragBehavior {
     document.removeEventListener('pointermove', this.onDragMove)
     document.removeEventListener('touchmove',   this.onDragMove)
     document.removeEventListener('pointerup',   this.onDragEnd)
+    document.removeEventListener('touchend',    this.onDragEnd)
     this.options.onEnd?.(end)
+    this.start = Point.EMPTY
+    this.previous = Point.EMPTY
   }
 }
 
@@ -61,7 +73,7 @@ function pointerX(event: PointerEvent | TouchEvent) {
   if (event instanceof PointerEvent) {
     return event.pageX
   } else {
-    return event.touches[0].pageX
+    return (event.changedTouches[0] ?? event.touches[0]).pageX
   }
 }
 
@@ -69,6 +81,6 @@ function pointerY(event: PointerEvent | TouchEvent) {
   if (event instanceof PointerEvent) {
     return event.pageY
   } else {
-    return event.touches[0].pageY
+    return (event.changedTouches[0] ?? event.touches[0]).pageY
   }
 }
