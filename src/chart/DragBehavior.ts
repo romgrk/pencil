@@ -38,7 +38,6 @@ export class DragBehavior {
     }
     this.start = new Point(pointerX(event), pointerY(event))
     this.previous = this.start
-    console.log('START', event)
     document.addEventListener('pointermove', this.onDragMove)
     document.addEventListener('touchmove',   this.onDragMove)
     document.addEventListener('pointerup',   this.onDragEnd)

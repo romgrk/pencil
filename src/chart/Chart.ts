@@ -6,6 +6,7 @@ import { Pencil } from './Pencil'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
+import { ScrollBehavior } from './ScrollBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import { PIXEL_RATIO, TRANSFORM_EMPTY, TRANSFORM_PIXEL_RATIO } from './constants'
@@ -250,7 +251,7 @@ export class Chart {
     this.layers.push(this.layersByName.grid)
     this.layers.push(this.layersByName.debug)
 
-    const behavior = new DragBehavior(this, {
+    const drag = new DragBehavior(this, {
       onStart: () => {
         const content = this.layersByName.content
         content.alpha = 0.6
@@ -267,7 +268,39 @@ export class Chart {
         this.render()
       },
     })
-    behavior.enable()
+    drag.enable()
+
+    const scroll = new ScrollBehavior(this, {
+      onScrollHorizontal: (event) => {
+        const content = this.layersByName.content
+        content.transform = content.transform.translate(
+          event.deltaX / PIXEL_RATIO,
+          0
+        )
+        this.render()
+      },
+      onScrollVertical: (event) => {
+        const rangeWidth = this.scale.x.range[1] - this.scale.x.range[0]
+        const dw = rangeWidth * 0.01 * (event.deltaY > 0 ? -1 : 1)
+
+        const xScale = linearScale(
+          this.scale.x.domain,
+          [
+            this.scale.x.range[0] - dw,
+            this.scale.x.range[1] + dw,
+          ]
+        )
+        this.scale.x = xScale
+
+        const pathNode = new PathNode(this, this.dataset)
+        this.layersByName.path.clear()
+        this.layersByName.path.add(pathNode)
+
+        this.populateDataset()
+        this.render()
+      },
+    })
+    scroll.enable()
 
     pathNode.shape = Path.EMPTY
     this.populateDataset(0, 0)
@@ -307,7 +340,7 @@ export class Chart {
     )
   }
 
-  populateDataset(r: number, a: number = 1) {
+  populateDataset(r: number = 3, a: number = 1) {
     const dataset = this.dataset
     const points = this.layersByName.points
     const xLabels = this.layersByName.xLabels
