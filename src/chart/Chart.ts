@@ -1,9 +1,10 @@
-import { Box, Matrix, Point, Segment, Circle } from '2d-geometry'
+import { Box, Bezier, Matrix, Path, Point, Segment, Circle } from '2d-geometry'
 import { Node } from './Node'
 import { Dataset } from './Dataset'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
 import { Style } from './Style'
+import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
@@ -32,6 +33,15 @@ const colors = {
   pointFill: '#599eff',
   pointPathStroke: '#599eff',
 }
+const LABEL_TEXT_STYLE = TextStyle.from({
+  font: '16px serif',
+  textAlign: 'center',
+  textBaseline: 'top',
+})
+const LABEL_STYLE = Style.from({ fillStyle: colors.axisLine })
+
+const AXIS_STYLE = Style.from({ strokeStyle: colors.axisLine })
+const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
 
 class DebugNode extends Node {
   render() {
@@ -71,54 +81,85 @@ class GridNode extends Node {
 }
 
 class PathNode extends Node {
-  static style = Style.from({ strokeStyle: colors.pointPathStroke })
+  static style = Style.from({
+    lineWidth: 2,
+    strokeStyle: colors.pointPathStroke
+  })
 
-  points: [number, number][]
-  controlPoints1: [number, number][]
-  controlPoints2: [number, number][]
+  fullShape: Path
 
   constructor(chart: Chart, dataset: Dataset) {
     super(chart)
 
     // See https://proandroiddev.com/drawing-bezier-curve-like-in-google-material-rally-e2b38053038c
-    const points = this.points = dataset.entries.map(entry => [
+    const points = dataset.entries.map(entry => [
       chart.scale.x(dataset.xGet(entry)),
       chart.scale.y(dataset.yGet(entry)),
     ])
-    const controlPoints1 = this.controlPoints1 = [] as [number, number][]
-    const controlPoints2 = this.controlPoints2 = [] as [number, number][]
+    const controlPoints1 = [] as [number, number][]
+    const controlPoints2 = [] as [number, number][]
     for (let i = 1; i < points.length; i++) {
       controlPoints1.push([(points[i][0] + points[i - 1][0]) / 2, points[i - 1][1]])
       controlPoints2.push([(points[i][0] + points[i - 1][0]) / 2, points[i][1]])
     }
+
+    const parts = [] as Bezier[]
+    for (let i = 1; i < points.length; i++) {
+      const curve = new Bezier(
+        new Point(points[i - 1][0], points[i - 1][1]),
+
+        new Point(controlPoints1[i - 1][0], controlPoints1[i - 1][1]),
+        new Point(controlPoints2[i - 1][0], controlPoints2[i - 1][1]),
+
+        new Point(points[i][0], points[i][1]),
+      )
+      parts.push(curve)
+    }
+
+    this.shape = new Path(parts)
+    this.style = PathNode.style
+    this.fullShape = this.shape as Path
+  }
+}
+
+class TextNode extends Node {
+  static STYLE = Style.from({ fillStyle: 'black' })
+
+  readonly text: string
+  textStyle: TextStyle
+  position: Point
+  _dimensions: TextMetrics | null
+
+  constructor(
+    chart: Chart,
+    text: string | number,
+    position: Point,
+    textStyle: TextStyle,
+    style: Style = TextNode.STYLE,
+  ) {
+    super(chart)
+    this.style = style ?? TextNode.STYLE
+    this.text = String(text)
+    this.textStyle = textStyle
+    this.position = position
+    this._dimensions = null
+  }
+
+  get dimensions() {
+    if (!this._dimensions) {
+      const pencil = this.chart.pencil
+      const ctx = this.chart.ctx
+      pencil.textStyle(this.textStyle)
+      this._dimensions = ctx.measureText(this.text)
+    }
+    return this._dimensions
   }
 
   render() {
     const { pencil } = this.chart
-    const { points, controlPoints1, controlPoints2 } = this
-
-    pencil.style(PathNode.style)
-    pencil.beginPath()
-    for (let i = 0; i < points.length; i++) {
-      const point = points[i]
-
-      if (i === 0) {
-        pencil.moveTo(
-          point[0],
-          point[1],
-        )
-      } else {
-        pencil.bezierCurveTo(
-          controlPoints1[i - 1][0],
-          controlPoints1[i - 1][1],
-          controlPoints2[i - 1][0],
-          controlPoints2[i - 1][1],
-          points[i][0],
-          points[i][1],
-        )
-      }
-    }
-    pencil.stroke()
+    pencil.style(this.style)
+    pencil.textStyle(this.textStyle)
+    pencil.drawText(this.text, this.position)
   }
 }
 
@@ -179,22 +220,13 @@ export class Chart {
     this.layers = []
     this.layersByName = {}
 
-    this.layersByName.content = new Layer(this, [])
+    this.layersByName.content = new Layer(this, [], TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin))
     this.layersByName.grid = new Layer(this, [new GridNode(this)])
 
-    const pointsMask = new Box(0, 0, 0, graphBox.height)
-    this.layersByName.points = new Layer(
-      this,
-      [],
-      TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin),
-      new Node(this, pointsMask)
-    )
-    this.layersByName.path = new Layer(
-      this,
-      [new PathNode(this, this.dataset)],
-      TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin),
-      new Node(this, pointsMask)
-    )
+    const pathNode = new PathNode(this, this.dataset)
+    this.layersByName.path = new Layer(this, [pathNode])
+    this.layersByName.points = new Layer(this, [])
+    this.layersByName.xLabels = new Layer(this, [])
 
     this.layersByName.debug = new Layer(this, [
       new DebugNode(this),
@@ -203,6 +235,7 @@ export class Chart {
 
     this.layersByName.content.add(this.layersByName.path)
     this.layersByName.content.add(this.layersByName.points)
+    this.layersByName.content.add(this.layersByName.xLabels)
 
     this.layers.push(this.layersByName.content)
     this.layers.push(this.layersByName.grid)
@@ -227,50 +260,70 @@ export class Chart {
     })
     behavior.activate()
 
-    this.populateDataset(0)
+    pathNode.shape = Path.EMPTY
+    this.populateDataset(0, 0)
     this.render()
 
     animate({
       from: 0,
-      to: graphBox.width,
-      duration: 500,
+      to: pathNode.fullShape.length,
+      duration: 1_000,
       easing: Easing.EASE_IN_OUT,
-      onChange: (width, done) => {
-        pointsMask.xmax = width
-        this.render()
-
+      onChange: (length, done) => {
         if (done) {
-          animate({
-            from: 0,
-            to: 2,
-            duration: 250,
-            easing: Easing.LINEAR,
-            onChange: (r, done) => {
-              this.populateDataset(r)
-              this.render()
-              if (done) {
-              }
-            }
-          })
+          pathNode.shape = pathNode.fullShape
+        } else {
+          pathNode.shape = pathNode.fullShape.slice(0, length)
         }
+        this.render()
       }
     })
+    .then(() =>
+      animate({ from: 0, to: 3, duration: 500, easing: Easing.LINEAR, onChange: (r) => {
+        this.populateDataset(r, 0)
+        this.render()
+      }})
+    )
+    .then(() =>
+      animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR, onChange: (f) => {
+        this.populateDataset(3, f)
+        this.render()
+      }})
+    )
   }
 
-  populateDataset(r: number) {
+  populateDataset(r: number, a: number = 1) {
     const dataset = this.dataset
-    const layer = this.layersByName.points
-    layer.clear()
+    const points = this.layersByName.points
+    const xLabels = this.layersByName.xLabels
+    points.clear()
+    xLabels.clear()
+    xLabels.alpha = a
 
+    let lastLabelX = -Infinity
     for (let i = 0; i < dataset.entries.length; i++) {
       const entry = dataset.entries[i]
       const x = this.scale.x(dataset.xGet(entry))
       const y = this.scale.y(dataset.yGet(entry))
-      layer.add(new Node(
+      points.add(new Node(
         this,
         new Circle(new Point(x, y), r),
         Style.from({ fillStyle: colors.pointFill })
       ))
+      if (lastLabelX < x) {
+        const textNode = new TextNode(
+          this,
+          dataset.xLabel(entry),
+          new Point(x, -5),
+          LABEL_TEXT_STYLE,
+          LABEL_STYLE,
+        )
+        lastLabelX = x + textNode.dimensions.width + 10
+        xLabels.add(new Layer(this, [
+          new Node(this, new Segment(x, -5, x, 5), AXIS_TICK_STYLE),
+          textNode,
+        ]))
+      }
     }
   }
 

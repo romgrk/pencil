@@ -24,8 +24,11 @@ const weeks = byWeek.reduce((result, xs) => {
 const partial = weeks.slice(157)
 const dataset = new Dataset(
   partial,
-  (e) => Math.floor(Date.parse(e.day) / 8.64e7),
-  (e) => e.downloads,
+  {
+    xGet: (e) => Math.floor(Date.parse(e.day) / 8.64e7),
+    yGet: (e) => e.downloads,
+    xLabel: (e) => e.day
+  }
 )
 
 function App() {

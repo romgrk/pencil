@@ -1,13 +1,27 @@
-export class Dataset<T = unknown> {
-  entries: T[]
+type DatasetOptions<T> = {
   xGet: (t: T) => number
   yGet: (t: T) => number
+  xLabel?: (t: T) => string
+  yLabel?: (t: T) => number
+}
+
+export class Dataset<T = unknown> {
+  entries: T[]
   stats: Stats
 
-  constructor(entries: T[], xGet: (t: T) => number, yGet: (t: T) => number) {
+  xGet: (t: T) => number
+  yGet: (t: T) => number
+  xLabel: (t: T) => string | number
+  yLabel: (t: T) => string | number
+
+  constructor(entries: T[], options: DatasetOptions<T>) {
     this.entries = entries
-    this.xGet = xGet
-    this.yGet = yGet
+
+    this.xGet = options.xGet
+    this.yGet = options.yGet
+    this.xLabel = options.xLabel ?? options.xGet
+    this.yLabel = options.yLabel ?? options.yGet
+
     this.stats = computeStats(this, 0, entries.length)
   }
 }

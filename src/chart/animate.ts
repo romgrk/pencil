@@ -29,6 +29,12 @@ export default function animate(options: Options) {
   const start = performance.now()
   let id = 0
 
+  let resolve: Function, reject: Function
+  const promise = new Promise((res, rej) => {
+    resolve = res
+    reject = rej
+  }) as Promise<void> & { cancel: Function }
+
   const step = (timestamp: number) => {
     const elapsed = timestamp - start - delay
 
@@ -36,19 +42,20 @@ export default function animate(options: Options) {
       id = requestAnimationFrame(step)
     } else if (elapsed >= duration) {
       onChange(to, true)
+      resolve()
     } else {
       onChange(lerp(easing(elapsed / duration), from, to), false)
       id = requestAnimationFrame(step)
     }
   }
 
-  const cancel = () => cancelAnimationFrame(id)
-
+  promise.cancel = () => {
+    cancelAnimationFrame(id)
+    reject()
+  }
   id = requestAnimationFrame(step)
 
-  return {
-    cancel,
-  }
+  return promise
 }
 
 export function lerp(factor: number, a: number, b: number) {
