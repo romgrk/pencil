@@ -239,7 +239,7 @@ export class Chart {
     this.layersByName.xLabels = new Layer(this, [])
 
     this.layersByName.debug = new Layer(this, [
-      new DebugNode(this),
+      // new DebugNode(this),
       // new Node(this, graphBox, Style.from({ strokeStyle: colors.debug }))
     ], TRANSFORM_EMPTY)
 
@@ -283,13 +283,12 @@ export class Chart {
         const rangeWidth = this.scale.x.range[1] - this.scale.x.range[0]
         const dw = rangeWidth * 0.01 * (event.deltaY > 0 ? -1 : 1)
 
-        const xScale = linearScale(
-          this.scale.x.domain,
-          [
-            this.scale.x.range[0] - dw,
-            this.scale.x.range[1] + dw,
-          ]
-        )
+        const range = clampIntervalWidth([
+          this.scale.x.range[0] - dw,
+          this.scale.x.range[1] + dw,
+        ] as [number, number], 400, 2_500)
+
+        const xScale = linearScale(this.scale.x.domain, range)
         this.scale.x = xScale
 
         const pathNode = new PathNode(this, this.dataset)
@@ -383,6 +382,30 @@ export class Chart {
       layer.render()
     }
   }
+}
+
+function clampIntervalWidth(interval: [number, number], minWidth: number, maxWidth: number) {
+  const width = interval[1] - interval[0]
+
+  if (width < minWidth) {
+    const center = interval[0] + width / 2
+
+    return [
+      center - minWidth / 2,
+      center + minWidth / 2,
+    ] as [number, number]
+  }
+
+  if (width > maxWidth) {
+    const center = interval[0] + width / 2
+
+    return [
+      center - maxWidth / 2,
+      center + maxWidth / 2,
+    ] as [number, number]
+  }
+
+  return interval
 }
 
 export default Chart
