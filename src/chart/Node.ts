@@ -1,22 +1,17 @@
 import { Point } from '2d-geometry'
 import type { Shape } from '2d-geometry'
 import type { Chart } from './Chart'
-import type { Layer } from './Layer'
 import { Base } from './Base'
 import { Style } from './Style'
-
-const EMPTY_LAYER = null as unknown as Layer
+import { TextStyle } from './TextStyle'
+import { measureText } from './measureText'
 
 export class Node extends Base {
-  chart: Chart
-  layer: Layer
   shape: Shape
   style: Style
 
-  constructor(chart: Chart, shape?: Shape, style?: Style) {
+  constructor(shape?: Shape, style?: Style) {
     super()
-    this.chart = chart
-    this.layer = EMPTY_LAYER
     this.shape = shape ?? Point.EMPTY
     this.style = style ?? Style.EMPTY
   }
@@ -25,8 +20,46 @@ export class Node extends Base {
     return this.shape.contains(p)
   }
 
-  render() {
-    this.chart.pencil.style(this.style)
-    this.chart.pencil.drawShape(this.shape)
+  render(chart: Chart) {
+    chart.pencil.style(this.style)
+    chart.pencil.drawShape(this.shape)
   }
 }
+
+export class TextNode extends Node {
+  static STYLE = Style.from({ fillStyle: 'black' })
+
+  readonly text: string
+  textStyle: TextStyle
+  position: Point
+  _dimensions: TextMetrics | null
+
+  constructor(
+    text: string | number,
+    position: Point,
+    textStyle: TextStyle,
+    style: Style = TextNode.STYLE,
+  ) {
+    super()
+    this.style = style ?? TextNode.STYLE
+    this.text = String(text)
+    this.textStyle = textStyle
+    this.position = position
+    this._dimensions = null
+  }
+
+  get dimensions() {
+    if (!this._dimensions) {
+      this._dimensions = measureText(this.text, this.textStyle)
+    }
+    return this._dimensions
+  }
+
+  render(chart: Chart) {
+    const { pencil } = chart
+    pencil.style(this.style)
+    pencil.textStyle(this.textStyle)
+    pencil.drawText(this.text, this.position)
+  }
+}
+

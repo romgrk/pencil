@@ -1,3 +1,5 @@
+import type { Chart } from './Chart'
+
 const EMPTY_CHILDREN = Object.freeze([]) as unknown as Base[]
 
 export abstract class Base {
@@ -9,5 +11,5 @@ export abstract class Base {
     this.children = EMPTY_CHILDREN
   }
 
-  abstract render(): void
+  abstract render(chart: Chart): void
 }

@@ -1,5 +1,5 @@
 import { Box, Bezier, Matrix, Path, Point, Segment, Circle } from '2d-geometry'
-import { Node } from './Node'
+import { Node, TextNode } from './Node'
 import { Dataset } from './Dataset'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
@@ -45,16 +45,16 @@ const AXIS_STYLE = Style.from({ strokeStyle: colors.axisLine })
 const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
 
 class DebugNode extends Node {
-  render() {
-    const { ctx } = this.chart
+  render(chart: Chart) {
+    const { ctx } = chart
 
     ctx.lineWidth = 2
     ctx.strokeStyle = colors.debug
     ctx.strokeRect(
       0,
       0,
-      this.chart.width - 1,
-      this.chart.height - 1,
+      chart.width - 1,
+      chart.height - 1,
     )
   }
 }
@@ -62,27 +62,22 @@ class DebugNode extends Node {
 class AxisNode extends Node {
   static style = Style.from({ strokeStyle: colors.axisLine })
 
-  factor: number
+  factor: number = 1
 
-  constructor(chart: Chart) {
-    super(chart)
-    this.factor = 1
-  }
-
-  render() {
-    const { pencil } = this.chart
+  render(chart: Chart) {
+    const { pencil } = chart
 
     pencil.style(AxisNode.style)
     pencil.drawShape(
       new Segment(
         AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(0, this.factor * (this.chart.height - 2 * PADDING)),
+        AXIS_ORIGIN.translate(0, this.factor * (chart.height - 2 * PADDING)),
       )
     )
     pencil.drawShape(
       new Segment(
         AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(this.factor * (this.chart.width - 2 * PADDING), 0),
+        AXIS_ORIGIN.translate(this.factor * (chart.width - 2 * PADDING), 0),
       )
     )
   }
@@ -97,7 +92,7 @@ class PathNode extends Node {
   fullShape: Path
 
   constructor(chart: Chart, dataset: Dataset) {
-    super(chart)
+    super()
 
     // See https://proandroiddev.com/drawing-bezier-curve-like-in-google-material-rally-e2b38053038c
     const points = dataset.entries.map(entry => [
@@ -127,47 +122,6 @@ class PathNode extends Node {
     this.shape = new Path(parts)
     this.style = PathNode.style
     this.fullShape = this.shape as Path
-  }
-}
-
-class TextNode extends Node {
-  static STYLE = Style.from({ fillStyle: 'black' })
-
-  readonly text: string
-  textStyle: TextStyle
-  position: Point
-  _dimensions: TextMetrics | null
-
-  constructor(
-    chart: Chart,
-    text: string | number,
-    position: Point,
-    textStyle: TextStyle,
-    style: Style = TextNode.STYLE,
-  ) {
-    super(chart)
-    this.style = style ?? TextNode.STYLE
-    this.text = String(text)
-    this.textStyle = textStyle
-    this.position = position
-    this._dimensions = null
-  }
-
-  get dimensions() {
-    if (!this._dimensions) {
-      const pencil = this.chart.pencil
-      const ctx = this.chart.ctx
-      pencil.textStyle(this.textStyle)
-      this._dimensions = ctx.measureText(this.text)
-    }
-    return this._dimensions
-  }
-
-  render() {
-    const { pencil } = this.chart
-    pencil.style(this.style)
-    pencil.textStyle(this.textStyle)
-    pencil.drawText(this.text, this.position)
   }
 }
 
@@ -228,17 +182,17 @@ export class Chart {
     this.layers = []
     this.layersByName = {}
 
-    this.layersByName.content = new Layer(this, [], TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin))
+    this.layersByName.content = new Layer([], TRANSFORM_EMPTY.translate(graphBox.xmin, graphBox.ymin))
 
-    const axisNode = new AxisNode(this)
-    this.layersByName.axis = new Layer(this, [axisNode])
+    const axisNode = new AxisNode()
+    this.layersByName.axis = new Layer([axisNode])
 
     const pathNode = new PathNode(this, this.dataset)
-    this.layersByName.path = new Layer(this, [pathNode])
-    this.layersByName.points = new Layer(this, [])
-    this.layersByName.xLabels = new Layer(this, [])
+    this.layersByName.path = new Layer([pathNode])
+    this.layersByName.points = new Layer([])
+    this.layersByName.xLabels = new Layer([])
 
-    this.layersByName.debug = new Layer(this, [
+    this.layersByName.debug = new Layer([
       // new DebugNode(this),
       // new Node(this, graphBox, Style.from({ strokeStyle: colors.debug }))
     ], TRANSFORM_EMPTY)
@@ -353,21 +307,19 @@ export class Chart {
       const x = this.scale.x(dataset.xGet(entry))
       const y = this.scale.y(dataset.yGet(entry))
       points.add(new Node(
-        this,
         new Circle(new Point(x, y), r),
         Style.from({ fillStyle: colors.pointFill })
       ))
       if (lastLabelX < x) {
         const textNode = new TextNode(
-          this,
           dataset.xLabel(entry),
           new Point(x, -5),
           LABEL_TEXT_STYLE,
           LABEL_STYLE,
         )
         lastLabelX = x + textNode.dimensions.width + 10
-        xLabels.add(new Layer(this, [
-          new Node(this, new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
+        xLabels.add(new Layer([
+          new Node(new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
           textNode,
         ]))
       }
@@ -379,7 +331,7 @@ export class Chart {
 
     for (let i = 0; i < this.layers.length; i++) {
       const layer = this.layers[i]
-      layer.render()
+      layer.render(this)
     }
   }
 }
