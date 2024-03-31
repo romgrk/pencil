@@ -1,8 +1,13 @@
 
+type LinearGradient = {
+  positions: [number, number, number, number],
+  stops: [number, string][],
+}
+
 export type StyleOptions = {
-  lineWidth: number
-  strokeStyle: string | null
-  fillStyle: string | null
+  lineWidth: number,
+  strokeStyle: LinearGradient | string | null,
+  fillStyle: LinearGradient | string | null,
 }
 
 const DEFAULT_OPTIONS = {
@@ -11,32 +16,34 @@ const DEFAULT_OPTIONS = {
   fillStyle: null,
 }
 
+let nextId = 1
+
+const styleByHash = new Map<string, Style>
+const gradientMap = new WeakMap<LinearGradient, CanvasGradient>()
+
 export class Style {
   id: number
   options: StyleOptions
 
-  static nextId = 1
-  static styleByHash = new Map<string, Style>
-
   static EMPTY = Style.from({})
 
   static from(someOptions: Partial<StyleOptions>): Style;
-  static from(lineWidth: number, strokeStyle?: string | null, fillStyle?: string | null): Style;
+  static from(lineWidth: number, strokeStyle?: string | null, fillStyle?: LinearGradient | string | null): Style;
   static from(a: unknown, b?: unknown, c?: unknown) {
     let options: StyleOptions
     let hash: string
 
     if (typeof a === 'object') {
       options = Object.assign({}, DEFAULT_OPTIONS, a)
-      hash = options.lineWidth + '#' + options.strokeStyle + '#' + options.fillStyle
+      hash = options.lineWidth + '#' + options.strokeStyle + '#' + JSON.stringify(options.fillStyle)
       {
-        const style = Style.styleByHash.get(hash)
+        const style = styleByHash.get(hash)
         if (style) {
           return style
         }
       }
-      const style = new Style(Style.nextId++, options)
-      Style.styleByHash.set(hash, style)
+      const style = new Style(nextId++, options)
+      styleByHash.set(hash, style)
       return style
     }
     else {
@@ -45,7 +52,7 @@ export class Style {
       const fillStyle   = (c as string) ?? DEFAULT_OPTIONS.fillStyle
       hash = lineWidth + '##' + strokeStyle + '##' + fillStyle
       {
-        const style = Style.styleByHash.get(hash)
+        const style = styleByHash.get(hash)
         if (style) {
           return style
         }
@@ -53,14 +60,47 @@ export class Style {
       options = { lineWidth, strokeStyle, fillStyle }
     }
 
-    const style = new Style(Style.nextId++, options)
-    Style.styleByHash.set(hash, style)
+    const style = new Style(nextId++, options)
+    styleByHash.set(hash, style)
     return style
+  }
+
+  static linearGradient(context: CanvasRenderingContext2D, description: LinearGradient) {
+    const result = gradientMap.get(description)
+    if (result) {
+      return result
+    }
+    const gradient = context.createLinearGradient(...description.positions)
+    description.stops.forEach(s => {
+      gradient.addColorStop(...s)
+    })
+    gradientMap.set(description, gradient)
+    return gradient
   }
 
   private constructor(id: number, options: StyleOptions) {
     this.id = id
     this.options = options
+  }
+
+  strokeStyle(ctx: CanvasRenderingContext2D) {
+    if (this.options.strokeStyle === null) {
+      return 'black'
+    }
+    if (typeof this.options.strokeStyle === 'string') {
+      return this.options.strokeStyle
+    }
+    return Style.linearGradient(ctx, this.options.strokeStyle)
+  }
+
+  fillStyle(ctx: CanvasRenderingContext2D) {
+    if (this.options.fillStyle === null) {
+      return 'black'
+    }
+    if (typeof this.options.fillStyle === 'string') {
+      return this.options.fillStyle
+    }
+    return Style.linearGradient(ctx, this.options.fillStyle)
   }
 }
 

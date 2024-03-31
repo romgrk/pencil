@@ -1,5 +1,6 @@
 import { Box, Matrix } from '2d-geometry'
 import { Dataset } from './Dataset'
+import { Base } from './Base'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
 import { linearScale, LinearScale } from './linearScale'
@@ -34,7 +35,7 @@ export class Chart {
 
   content: Box
 
-  layers: Layer[]
+  layerRoot: Layer
   layersByName: Record<string, Layer>
 
   dataset: Dataset
@@ -61,10 +62,7 @@ export class Chart {
 
     this.transform = TRANSFORM_PIXEL_RATIO
 
-    this.content = new Box(
-      PADDING, PADDING,
-      this.width - PADDING, this.height - PADDING
-    )
+    this.content = new Box(PADDING, PADDING, this.width - PADDING, this.height - PADDING)
 
     this.dataset = options.dataset
     this.scale = {
@@ -78,17 +76,15 @@ export class Chart {
       ),
     }
 
-    this.layers = []
-    this.layersByName = {}
+    this.layerRoot = new Layer()
+    this.layersByName = {
+      root: this.layerRoot
+    }
   }
 
   render() {
     this.pencil.clear()
-
-    for (let i = 0; i < this.layers.length; i++) {
-      const layer = this.layers[i]
-      layer.render(this)
-    }
+    this.layerRoot.render(this)
   }
 }
 

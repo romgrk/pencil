@@ -33,8 +33,8 @@ export class Pencil {
     this.lastStyleId = s.id
     this.lastStyle = s
     this.ctx.lineWidth = s.options.lineWidth
-    this.ctx.strokeStyle = s.options.strokeStyle ?? 'black'
-    this.ctx.fillStyle = s.options.fillStyle ?? 'black'
+    this.ctx.strokeStyle = s.strokeStyle(this.ctx)
+    this.ctx.fillStyle = s.fillStyle(this.ctx)
   }
 
   textStyle(s: TextStyle) {
@@ -64,7 +64,7 @@ export class Pencil {
 
   mask(mask: Base) {
     this.isMasking = true
-    mask.render()
+    mask.render(this.chart)
     this.isMasking = false
     this.ctx.clip()
   }
@@ -88,11 +88,12 @@ export class Pencil {
     }
   }
 
-  drawShapePath(s: Shape) {
+  drawShapePath(s: Shape, move: boolean = true) {
     if (s instanceof Box) {
       this.ctx.rect(s.xmin, this.y(s.ymin) - s.height, s.width, s.height)
     }
     else if (s instanceof Segment) {
+      if (move)
       this.ctx.moveTo(s.start.x, this.y(s.start.y))
       this.ctx.lineTo(s.end.x,   this.y(s.end.y))
     }
@@ -100,6 +101,7 @@ export class Pencil {
       this.ctx.ellipse(s.center.x, this.y(s.center.y), s.r, s.r, 0, 0, Math.PI * 2)
     }
     else if (s instanceof Bezier) {
+      if (move)
       this.ctx.moveTo(s.start.x, this.y(s.start.y))
       this.ctx.bezierCurveTo(
         s.control1.x, this.y(s.control1.y),
@@ -108,8 +110,11 @@ export class Pencil {
       )
     }
     else if (s instanceof Path) {
+      const start = s.pointAtLength(0)
+      this.ctx.moveTo(start.x, this.y(start.y))
+
       for (let i = 0; i < s.parts.length; i++) {
-        this.drawShapePath(s.parts[i])
+        this.drawShapePath(s.parts[i], false)
       }
     }
     else {

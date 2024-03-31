@@ -1,13 +1,12 @@
-import { Box, Bezier, Matrix, Path, Point, Segment, Circle } from '2d-geometry'
+import { Box, Bezier, Path, Point, Segment, Circle } from '2d-geometry'
 import { Node, TextNode } from './Node'
 import { Dataset } from './Dataset'
 import { Layer } from './Layer'
-import { Pencil } from './Pencil'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
 import { ScrollBehavior } from './ScrollBehavior'
-import { linearScale, LinearScale } from './linearScale'
+import { linearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import * as Interval from './interval'
 import { PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
@@ -18,9 +17,10 @@ export type Options = chart.Options
 
 const colors = {
   debug: '#ff0000dd',
-  axisLine: '#d0d0d0',
+  axisLine: '#aaa',
+  axisLabel: '#777',
   pointFill: '#599eff',
-  pointPathStroke: '#599eff',
+  pathStroke: '#599eff',
 }
 
 const PADDING = 50
@@ -31,9 +31,8 @@ const LABEL_TEXT_STYLE = TextStyle.from({
   textAlign: 'center',
   textBaseline: 'top',
 })
-const LABEL_STYLE = Style.from({ fillStyle: colors.axisLine })
+const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
 
-const AXIS_STYLE = Style.from({ strokeStyle: colors.axisLine })
 const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
 
 class DebugNode extends Node {
@@ -78,14 +77,10 @@ class AxisNode extends Node {
 class PathNode extends Node {
   static style = Style.from({
     lineWidth: 2,
-    strokeStyle: colors.pointPathStroke
+    strokeStyle: colors.pathStroke
   })
 
-  fullShape: Path
-
-  constructor(chart: Chart, dataset: Dataset) {
-    super()
-
+  static buildPath(chart: Chart, dataset: Dataset) {
     // See https://proandroiddev.com/drawing-bezier-curve-like-in-google-material-rally-e2b38053038c
     const points = dataset.entries.map(entry => [
       chart.scale.x(dataset.xGet(entry)),
@@ -111,9 +106,49 @@ class PathNode extends Node {
       parts.push(curve)
     }
 
-    this.shape = new Path(parts)
+    return new Path(parts)
+  }
+
+  fullShape: Path
+
+  constructor(chart: Chart, dataset: Dataset) {
+    super()
+
+    this.tags.add('path')
+    this.shape = PathNode.buildPath(chart, dataset)
     this.style = PathNode.style
     this.fullShape = this.shape as Path
+  }
+}
+
+class PathAreaNode extends Node {
+  constructor(chart: Chart, dataset: Dataset) {
+    super()
+
+    const path = PathNode.buildPath(chart, dataset)
+    path.parts.unshift(new Segment(
+      new Point(0, 0),
+      path.parts[0].start,
+    ))
+    path.parts.push(new Segment(
+      path.parts[path.parts.length - 1].end,
+      new Point(path.parts[path.parts.length - 1].end.x, 0),
+    ))
+    path.parts.push(new Segment(
+      path.parts[path.parts.length - 1].end,
+      new Point(path.parts[path.parts.length - 1].end.x, 0),
+    ))
+
+    this.shape = path
+    this.style = Style.from({
+      fillStyle: {
+        positions: [0, 0, 0, chart.content.height],
+        stops: [
+          [0.0, colors.pathStroke + '44'],
+          [1.0, colors.pathStroke + '00'],
+        ],
+      }
+    })
   }
 }
 
@@ -127,27 +162,33 @@ export class LinearChart extends chart.Chart {
     this.layersByName.axis = new Layer([axisNode])
 
     const pathNode = new PathNode(this, this.dataset)
-    this.layersByName.path = new Layer([pathNode])
+    const pathAreaNode = new PathAreaNode(this, this.dataset)
+    this.layersByName.path = new Layer([
+      pathNode,
+      pathAreaNode,
+    ])
     this.layersByName.points = new Layer([])
+    this.layersByName.points.tags.add('path')
     this.layersByName.xLabels = new Layer([])
 
     this.layersByName.debug = new Layer([
-      // new DebugNode(this),
-      // new Node(this, this.content, Style.from({ strokeStyle: colors.debug }))
+      new DebugNode(),
+      // new Node(this.content, Style.from({ strokeStyle: colors.debug }))
     ], TRANSFORM_EMPTY)
 
     this.layersByName.content.add(this.layersByName.path)
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
-    this.layers.push(this.layersByName.content)
-    this.layers.push(this.layersByName.axis)
-    this.layers.push(this.layersByName.debug)
+    this.layerRoot.add(this.layersByName.content)
+    this.layerRoot.add(this.layersByName.axis)
+    // this.layerRoot.add(this.layersByName.debug)
 
     const drag = new DragBehavior(this, {
       onStart: () => {
-        const content = this.layersByName.content
-        content.alpha = 0.6
+        this.layerRoot.queryAll('path').forEach(p => {
+          p.alpha = 0.7
+        })
         this.render()
       },
       onMove: (_, dx) => {
@@ -156,8 +197,9 @@ export class LinearChart extends chart.Chart {
         this.render()
       },
       onEnd: () => {
-        const content = this.layersByName.content
-        content.alpha = 1
+        this.layerRoot.queryAll('path').forEach(p => {
+          p.alpha = 1
+        })
         this.render()
       },
     })
@@ -185,8 +227,10 @@ export class LinearChart extends chart.Chart {
         this.scale.x = xScale
 
         const pathNode = new PathNode(this, this.dataset)
+        const pathAreaNode = new PathAreaNode(this, this.dataset)
         this.layersByName.path.clear()
         this.layersByName.path.add(pathNode)
+        this.layersByName.path.add(pathAreaNode)
 
         this.populateDataset()
         this.render()
@@ -195,20 +239,17 @@ export class LinearChart extends chart.Chart {
     scroll.enable()
 
     pathNode.shape = Path.EMPTY
+    pathAreaNode.alpha = 0
     this.populateDataset(0, 0)
     this.render()
 
-    animate({ duration: 500, easing: Easing.EASE_IN_OUT, onChange: (f) => {
+    animate({ duration: 500, easing: Easing.EASE_IN_OUT }, (f) => {
       axisNode.factor = f
       this.render()
-    }})
+    })
     .then(() =>
-      animate({
-        from: 0,
-        to: pathNode.fullShape.length,
-        duration: 1_000,
-        easing: Easing.EASE_IN_OUT,
-        onChange: (length, done) => {
+      animate({ from: 0, to: pathNode.fullShape.length, duration: 1_000, easing: Easing.EASE_IN_OUT },
+        (length, done) => {
           if (done) {
             pathNode.shape = pathNode.fullShape
           } else {
@@ -216,19 +257,25 @@ export class LinearChart extends chart.Chart {
           }
           this.render()
         }
+      )
+    )
+    .then(() =>
+      animate({ from: 0, to: 3, duration: 250, easing: Easing.LINEAR }, (r) => {
+        this.populateDataset(r, 0)
+        this.render()
       })
     )
     .then(() =>
-      animate({ from: 0, to: 3, duration: 250, easing: Easing.LINEAR, onChange: (r) => {
-        this.populateDataset(r, 0)
-        this.render()
-      }})
-    )
-    .then(() =>
-      animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR, onChange: (f) => {
+      animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR }, (f) => {
         this.populateDataset(3, f)
         this.render()
-      }})
+      })
+    )
+    .then(() =>
+      animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR }, (f) => {
+        pathAreaNode.alpha = f
+        this.render()
+      })
     )
   }
 
@@ -256,7 +303,7 @@ export class LinearChart extends chart.Chart {
           LABEL_TEXT_STYLE,
           LABEL_STYLE,
         )
-        lastLabelX = x + textNode.dimensions.width + 10
+        lastLabelX = x + textNode.dimensions.width + 40
         xLabels.add(new Layer([
           new Node(new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
           textNode,

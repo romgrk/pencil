@@ -6,7 +6,6 @@ import { TRANSFORM_EMPTY } from './constants'
 export class Layer extends Base {
   transform: Matrix
   mask: Base | null
-  alpha: number
 
   constructor(children: Base[] = [], transform?: Matrix, mask?: Base, alpha?: number) {
     super()
@@ -34,6 +33,29 @@ export class Layer extends Base {
     this.children = []
   }
 
+  query(tag: string): Base | null {
+    try {
+      traverse(this, child => {
+        if (child.tags.has(tag)) {
+          throw child
+        }
+      })
+    } catch (result: any) {
+      return result
+    }
+    return null
+  }
+
+  queryAll(tag: string) {
+    const result = [] as Base[]
+    traverse(this, child => {
+      if (child.tags.has(tag)) {
+        result.push(child)
+      }
+    })
+    return result
+  }
+
   render(chart: Chart) {
     chart.ctx.save()
 
@@ -56,10 +78,23 @@ export class Layer extends Base {
 
     for (let j = 0; j < this.children.length; j++) {
       const node = this.children[j]
+      if (node.alpha !== 1) {
+        chart.ctx.globalAlpha = chart.ctx.globalAlpha * node.alpha
+      }
       node.render(chart)
+      if (node.alpha !== 1) {
+        chart.ctx.globalAlpha = chart.ctx.globalAlpha / node.alpha
+      }
     }
 
     chart.ctx.restore()
   }
 }
 
+
+function traverse(b: Base, fn: (b: Base) => void) {
+  fn(b)
+  if (b instanceof Layer) {
+    b.children.forEach(c => traverse(c, fn))
+  }
+}

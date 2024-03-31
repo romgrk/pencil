@@ -15,8 +15,9 @@ type Options = {
   duration: number,
   delay?: number,
   easing?: EasingFn,
-  onChange: (value: number, done: boolean) => void,
 }
+
+type AnimateCallback = (value: number, done: boolean) => void
 
 type AnimatePromise = Promise<void> & { cancel: Function }
 
@@ -26,8 +27,8 @@ type AnimatePromise = Promise<void> & { cancel: Function }
  * to stop exactly after `options.duration`, but it does guarantee that it will
  * never call `options.onChange` with a value outside `options.to`.
  */
-export default function animate(options: Options) {
-  const { from = 0, to = 1, duration, delay = 0, onChange, easing = Easing.EASE_IN_OUT } = options
+export default function animate(options: Options, onChange: AnimateCallback) {
+  const { from = 0, to = 1, duration, delay = 0, easing = Easing.EASE_IN_OUT } = options
   const start = performance.now()
   let id = 0
 
