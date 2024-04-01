@@ -1,9 +1,7 @@
-import { Box, Matrix } from '2d-geometry'
+import { Matrix } from '2d-geometry'
 import { Dataset } from './Dataset'
-import { Base } from './Base'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
-import { linearScale, LinearScale } from './linearScale'
 import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 
 const PADDING = 50
@@ -33,16 +31,8 @@ export class Chart {
   height: number
   transform: Matrix
 
-  content: Box
-
   layerRoot: Layer
   layersByName: Record<string, Layer>
-
-  dataset: Dataset
-  scale: {
-    x: LinearScale,
-    y: LinearScale,
-  }
 
   constructor(root: HTMLElement, options: Options) {
     this.root = root
@@ -61,20 +51,6 @@ export class Chart {
     this.canvas.style.height = `${this.height}px`
 
     this.transform = TRANSFORM_PIXEL_RATIO
-
-    this.content = new Box(PADDING, PADDING, this.width - PADDING, this.height - PADDING)
-
-    this.dataset = options.dataset
-    this.scale = {
-      x: linearScale(
-        [this.dataset.stats.range.minX, this.dataset.stats.range.maxX],
-        [0, this.content.width]
-      ),
-      y: linearScale(
-        [this.dataset.stats.range.minY / 4, this.dataset.stats.range.maxY * 1.1],
-        [0, this.content.height]
-      ),
-    }
 
     this.layerRoot = new Layer()
     this.layersByName = {

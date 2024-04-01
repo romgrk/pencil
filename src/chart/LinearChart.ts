@@ -1,4 +1,4 @@
-import { Box, Bezier, Path, Point, Segment, Circle } from '2d-geometry'
+import { Bezier, Box, Path, Point, Segment, Circle } from '2d-geometry'
 import { Node, TextNode } from './Node'
 import { Dataset } from './Dataset'
 import { Layer } from './Layer'
@@ -6,7 +6,7 @@ import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
 import { ScrollBehavior } from './ScrollBehavior'
-import { linearScale } from './linearScale'
+import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import * as Interval from './interval'
 import { PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
@@ -65,7 +65,7 @@ class PathNode extends Node {
     strokeStyle: colors.pathStroke
   })
 
-  static buildPath(chart: Chart, dataset: Dataset) {
+  static buildPath(chart: LinearChart, dataset: Dataset) {
     // See https://proandroiddev.com/drawing-bezier-curve-like-in-google-material-rally-e2b38053038c
     const points = dataset.entries.map(entry => [
       chart.scale.x(dataset.xGet(entry)),
@@ -96,7 +96,7 @@ class PathNode extends Node {
 
   fullShape: Path
 
-  constructor(chart: Chart, dataset: Dataset) {
+  constructor(chart: LinearChart, dataset: Dataset) {
     super()
 
     this.tags.add('path')
@@ -107,12 +107,12 @@ class PathNode extends Node {
 }
 
 class PathAreaNode extends Node {
-  constructor(chart: Chart, dataset: Dataset) {
+  constructor(chart: LinearChart, dataset: Dataset) {
     super()
 
     const path = PathNode.buildPath(chart, dataset)
     path.parts.unshift(new Segment(
-      new Point(0, 0),
+      new Point(path.parts[0].start.x, 0),
       path.parts[0].start,
     ))
     path.parts.push(new Segment(
@@ -129,9 +129,9 @@ class PathAreaNode extends Node {
       fillStyle: {
         positions: [0, 0, 0, chart.content.height],
         stops: [
-          [0.0, colors.pathStroke + '44'],
+          [0.0, colors.pathStroke + '55'],
           [0.6, colors.pathStroke + '22'],
-          [1.0, colors.pathStroke + '00'],
+          [1.0, colors.pathStroke + '0A'],
         ],
       }
     })
@@ -139,8 +139,30 @@ class PathAreaNode extends Node {
 }
 
 export class LinearChart extends chart.Chart {
+  content: Box
+  dataset: Dataset
+  scale: {
+    x: LinearScale,
+    y: LinearScale,
+  }
+
   constructor(root: HTMLElement, options: Options) {
     super(root, options)
+
+    this.content = new Box(PADDING, PADDING, this.width - PADDING, this.height - PADDING)
+
+    this.dataset = options.dataset
+    this.scale = {
+      x: linearScale(
+        [this.dataset.stats.range.minX, this.dataset.stats.range.maxX],
+        [0, this.content.width]
+      ),
+      y: linearScale(
+        [this.dataset.stats.range.minY / 4, this.dataset.stats.range.maxY * 1.1],
+        [0, this.content.height]
+      ),
+    }
+
 
     this.layersByName.content = new Layer([], TRANSFORM_EMPTY.translate(this.content.xmin, this.content.ymin))
 
