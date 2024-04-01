@@ -38,7 +38,7 @@ export class Graph {
 
   mixins: Mixin[]
 
-  constructor(root: HTMLElement, options: Options) {
+  constructor(root: HTMLElement, options?: Options) {
     this.root = root
     this.root.classList.add('ZenChart')
     this.root.innerHTML = CONTENT
@@ -46,8 +46,8 @@ export class Graph {
     this.ctx = this.canvas.getContext('2d')!
     this.pencil = new Pencil(this)
 
-    this.width = options.width ?? 500
-    this.height = options.height ?? 300
+    this.width  = options?.width ?? 500
+    this.height = options?.height ?? 300
 
     this.canvas.width = this.width * PIXEL_RATIO
     this.canvas.height = this.height * PIXEL_RATIO
