@@ -1,7 +1,8 @@
+import { Point } from '2d-geometry'
 import type { Graph } from './Graph'
 
 export type HoverOptions = {
-  onHover?: (event: WheelEvent) => void,
+  onPointerMove?: (position: Point, event: PointerEvent) => void,
 }
 
 export class HoverBehavior {
@@ -22,5 +23,10 @@ export class HoverBehavior {
   }
 
   onPointerMove = (event: PointerEvent) => {
+    const position = new Point(
+      event.offsetX,
+      this.graph.height - event.offsetY,
+    )
+    this.options.onPointerMove?.(position, event)
   }
 }

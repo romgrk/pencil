@@ -1,11 +1,12 @@
 import { Bezier, Box, Path, Point, Segment, Circle } from '2d-geometry'
 import { Node, TextNode } from './Node'
 import { Dataset } from './Dataset'
-import { Layer } from './Layer'
+import { Layer, traverse } from './Layer'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
 import { ScrollBehavior } from './ScrollBehavior'
+import { HoverBehavior } from './HoverBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import * as Interval from './interval'
@@ -99,7 +100,7 @@ class PathNode extends Node {
   constructor(chart: LinearChart, dataset: Dataset) {
     super()
 
-    this.tags.add('path')
+    this.addTag('path')
     this.shape = PathNode.buildPath(chart, dataset)
     this.style = PathNode.style
     this.fullShape = this.shape as Path
@@ -176,7 +177,7 @@ export class LinearChart extends chart.Graph {
       pathAreaNode,
     ])
     this.layersByName.points = new Layer([])
-    this.layersByName.points.tags.add('path')
+    this.layersByName.points.addTag('path')
     this.layersByName.xLabels = new Layer([])
 
     this.layersByName.content.add(this.layersByName.path)
@@ -206,6 +207,7 @@ export class LinearChart extends chart.Graph {
       },
     })
     drag.enable()
+    this.mixins.push(drag)
 
     const scroll = new ScrollBehavior(this, {
       onScrollHorizontal: (event) => {

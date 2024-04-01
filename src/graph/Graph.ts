@@ -1,8 +1,9 @@
 import { Matrix } from '2d-geometry'
 import { Dataset } from './Dataset'
+import { Base } from './Base'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
-import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
+import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
 
 // <div class='ZenChart'>
 //   <canvas class='ZenChart__canvas' />
@@ -18,6 +19,10 @@ export type Options = {
   dataset: Dataset<any>,
 }
 
+export type Mixin = {
+  disable?(): void
+}
+
 export class Graph {
   root: HTMLElement
   canvas: HTMLCanvasElement
@@ -30,6 +35,8 @@ export class Graph {
 
   layerRoot: Layer
   layersByName: Record<string, Layer>
+
+  mixins: Mixin[]
 
   constructor(root: HTMLElement, options: Options) {
     this.root = root
@@ -53,11 +60,38 @@ export class Graph {
     this.layersByName = {
       root: this.layerRoot
     }
+
+    this.mixins = []
+  }
+
+  destroy() {
+    this.mixins.forEach(m => m.disable?.())
   }
 
   render() {
     this.pencil.clear()
     this.layerRoot.render(this)
+  }
+
+  traverseWithTransform(fn: (element: Base, transform: Matrix) => void) {
+    const transforms = [this.transform]
+    let currentTransform = this.transform
+
+    function traverse(element: Base, fn: (element: Base, transform: Matrix) => void) {
+      currentTransform =
+        element.transform === TRANSFORM_EMPTY ?
+          currentTransform :
+          currentTransform.multiply(element.transform)
+      transforms.push(currentTransform)
+      fn(element, currentTransform)
+      for (let i = 0; i < element.children.length; i++) {
+        traverse(element.children[i], fn)
+      }
+      transforms.pop()
+      currentTransform = transforms[transforms.length - 1]
+    }
+
+    traverse(this.layerRoot, fn)
   }
 }
 
