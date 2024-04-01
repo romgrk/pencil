@@ -1,6 +1,6 @@
 import { Point } from '2d-geometry'
 import type { Shape } from '2d-geometry'
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 import { Base } from './Base'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
@@ -20,9 +20,9 @@ export class Node extends Base {
     return this.shape.contains(p)
   }
 
-  render(chart: Chart) {
-    chart.pencil.style(this.style)
-    chart.pencil.drawShape(this.shape)
+  render(graph: Graph) {
+    graph.pencil.style(this.style)
+    graph.pencil.drawShape(this.shape)
   }
 }
 
@@ -55,8 +55,8 @@ export class TextNode extends Node {
     return this._dimensions
   }
 
-  render(chart: Chart) {
-    const { pencil } = chart
+  render(graph: Graph) {
+    const { pencil } = graph
     pencil.style(this.style)
     pencil.textStyle(this.textStyle)
     pencil.drawText(this.text, this.position)

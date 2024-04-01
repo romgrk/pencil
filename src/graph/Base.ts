@@ -1,4 +1,4 @@
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 
 const EMPTY_CHILDREN = Object.freeze([]) as unknown as Base[]
 
@@ -16,5 +16,5 @@ export abstract class Base {
     this.tags = new Set()
   }
 
-  abstract render(chart: Chart): void
+  abstract render(chart: Graph): void
 }

@@ -1,12 +1,12 @@
 import { Circle, Bezier, Box, Path, Point, Segment, Shape } from '2d-geometry'
 import type { Base } from './Base'
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 import { PIXEL_RATIO } from './constants'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 
 export class Pencil {
-  chart: Chart
+  graph: Graph
   ctx: CanvasRenderingContext2D
   lastStyleId: number
   lastStyle: Style
@@ -14,9 +14,9 @@ export class Pencil {
   lastTextStyle: TextStyle
   isMasking: boolean
 
-  constructor(chart: Chart) {
-    this.chart = chart
-    this.ctx = chart.ctx
+  constructor(graph: Graph) {
+    this.graph = graph
+    this.ctx = graph.ctx
     this.lastStyleId = -1
     this.lastStyle = Style.EMPTY
     this.lastTextStyleId = -1
@@ -24,7 +24,7 @@ export class Pencil {
     this.isMasking = false
   }
 
-  y(n: number) { return this.chart.height - n }
+  y(n: number) { return this.graph.height - n }
 
   style(s: Style) {
     if (this.lastStyleId === s.id) {
@@ -51,20 +51,20 @@ export class Pencil {
 
   clear() {
     this.ctx.resetTransform()
-    this.ctx.clearRect(0, 0, this.chart.width * PIXEL_RATIO, this.chart.height * PIXEL_RATIO)
+    this.ctx.clearRect(0, 0, this.graph.width * PIXEL_RATIO, this.graph.height * PIXEL_RATIO)
     this.ctx.setTransform(
-      this.chart.transform.a,
-      this.chart.transform.b,
-      this.chart.transform.c,
-      this.chart.transform.d,
-      this.chart.transform.tx,
-      -this.chart.transform.ty,
+      this.graph.transform.a,
+      this.graph.transform.b,
+      this.graph.transform.c,
+      this.graph.transform.d,
+      this.graph.transform.tx,
+      -this.graph.transform.ty,
     )
   }
 
   mask(mask: Base) {
     this.isMasking = true
-    mask.render(this.chart)
+    mask.render(this.graph)
     this.isMasking = false
     this.ctx.clip()
   }

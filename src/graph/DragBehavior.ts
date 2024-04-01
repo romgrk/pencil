@@ -1,5 +1,5 @@
 import { Point } from '2d-geometry'
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 
 export type DragOptions = {
   onStart?: (start: Point) => void,
@@ -8,26 +8,26 @@ export type DragOptions = {
 }
 
 export class DragBehavior {
-  chart: Chart
+  graph: Graph
   start: Point
   previous: Point
   options: DragOptions
 
-  constructor(chart: Chart, options: DragOptions) {
-    this.chart = chart
+  constructor(graph: Graph, options: DragOptions) {
+    this.graph = graph
     this.start = Point.EMPTY
     this.previous = Point.EMPTY
     this.options = options
   }
 
   enable() {
-    this.chart.canvas.addEventListener('pointerdown', this.onDragStart)
-    this.chart.canvas.addEventListener('touchstart',  this.onDragStart)
+    this.graph.canvas.addEventListener('pointerdown', this.onDragStart)
+    this.graph.canvas.addEventListener('touchstart',  this.onDragStart)
   }
 
   disable() {
-    this.chart.canvas.removeEventListener('pointerdown', this.onDragStart)
-    this.chart.canvas.removeEventListener('touchstart',  this.onDragStart)
+    this.graph.canvas.removeEventListener('pointerdown', this.onDragStart)
+    this.graph.canvas.removeEventListener('touchstart',  this.onDragStart)
   }
 
   onDragStart = (event: PointerEvent | TouchEvent) => {

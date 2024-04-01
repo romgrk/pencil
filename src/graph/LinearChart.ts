@@ -10,8 +10,8 @@ import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import * as Interval from './interval'
 import { PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
-import * as chart from './Chart'
-import { Chart } from './Chart'
+import * as chart from './Graph'
+import { Graph } from './Graph'
 
 export type Options = chart.Options
 
@@ -40,7 +40,7 @@ class AxisNode extends Node {
 
   factor: number = 1
 
-  render(chart: Chart) {
+  render(chart: Graph) {
     const { pencil } = chart
 
     pencil.style(AxisNode.style)
@@ -138,7 +138,7 @@ class PathAreaNode extends Node {
   }
 }
 
-export class LinearChart extends chart.Chart {
+export class LinearChart extends chart.Graph {
   content: Box
   dataset: Dataset
   scale: {

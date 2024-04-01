@@ -4,9 +4,6 @@ import { Layer } from './Layer'
 import { Pencil } from './Pencil'
 import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 
-const PADDING = 50
-
-
 // <div class='ZenChart'>
 //   <canvas class='ZenChart__canvas' />
 // </div>
@@ -21,7 +18,7 @@ export type Options = {
   dataset: Dataset<any>,
 }
 
-export class Chart {
+export class Graph {
   root: HTMLElement
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
@@ -64,4 +61,4 @@ export class Chart {
   }
 }
 
-export default Chart
+export default Graph

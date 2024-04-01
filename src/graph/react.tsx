@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
-import * as chart from './Chart'
+import * as graph from './Graph'
 import * as linear from './LinearChart'
 
-export function Chart(props: chart.Options) {
+export function Graph(props: graph.Options) {
   const domNode = useRef<HTMLDivElement>()
-  const instance = useRef<chart.Chart>()
+  const instance = useRef<graph.Graph>()
 
   useEffect(() => {
-    instance.current = new chart.Chart(domNode.current!, props)
+    instance.current = new graph.Graph(domNode.current!, props)
   }, [])
 
   return (

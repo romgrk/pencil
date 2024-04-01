@@ -1,5 +1,5 @@
 import type { Matrix } from '2d-geometry'
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 import { Base } from './Base'
 import { TRANSFORM_EMPTY } from './constants'
 
@@ -56,11 +56,11 @@ export class Layer extends Base {
     return result
   }
 
-  render(chart: Chart) {
-    chart.ctx.save()
+  render(graph: Graph) {
+    graph.ctx.save()
 
     if (this.transform) {
-      chart.ctx.transform(
+      graph.ctx.transform(
         this.transform.a,
         this.transform.b,
         this.transform.c,
@@ -71,23 +71,23 @@ export class Layer extends Base {
     }
 
     if (this.mask) {
-      chart.pencil.mask(this.mask)
+      graph.pencil.mask(this.mask)
     }
 
-    chart.ctx.globalAlpha = chart.ctx.globalAlpha * this.alpha
+    graph.ctx.globalAlpha = graph.ctx.globalAlpha * this.alpha
 
     for (let j = 0; j < this.children.length; j++) {
       const node = this.children[j]
       if (node.alpha !== 1) {
-        chart.ctx.globalAlpha = chart.ctx.globalAlpha * node.alpha
+        graph.ctx.globalAlpha = graph.ctx.globalAlpha * node.alpha
       }
-      node.render(chart)
+      node.render(graph)
       if (node.alpha !== 1) {
-        chart.ctx.globalAlpha = chart.ctx.globalAlpha / node.alpha
+        graph.ctx.globalAlpha = graph.ctx.globalAlpha / node.alpha
       }
     }
 
-    chart.ctx.restore()
+    graph.ctx.restore()
   }
 }
 

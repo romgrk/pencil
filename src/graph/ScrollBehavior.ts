@@ -1,4 +1,4 @@
-import type { Chart } from './Chart'
+import type { Graph } from './Graph'
 
 export type ScrollOptions = {
   onScrollHorizontal?: (event: WheelEvent) => void,
@@ -6,20 +6,20 @@ export type ScrollOptions = {
 }
 
 export class ScrollBehavior {
-  chart: Chart
+  graph: Graph
   options: ScrollOptions
 
-  constructor(chart: Chart, options: ScrollOptions) {
-    this.chart = chart
+  constructor(graph: Graph, options: ScrollOptions) {
+    this.graph = graph
     this.options = options
   }
 
   enable() {
-    this.chart.canvas.addEventListener('wheel', this.onWheel)
+    this.graph.canvas.addEventListener('wheel', this.onWheel)
   }
 
   disable() {
-    this.chart.canvas.removeEventListener('wheel', this.onWheel)
+    this.graph.canvas.removeEventListener('wheel', this.onWheel)
   }
 
   onWheel = (event: WheelEvent) => {

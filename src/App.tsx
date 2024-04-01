@@ -1,5 +1,5 @@
-import { LinearChart } from './chart/react'
-import { Dataset } from './chart/Dataset'
+import { LinearChart } from './graph/react'
+import { Dataset } from './graph/Dataset'
 import data from './grid-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
