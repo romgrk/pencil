@@ -35,21 +35,6 @@ const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
 
 const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
 
-class DebugNode extends Node {
-  render(chart: Chart) {
-    const { ctx } = chart
-
-    ctx.lineWidth = 2
-    ctx.strokeStyle = colors.debug
-    ctx.strokeRect(
-      0,
-      0,
-      chart.width - 1,
-      chart.height - 1,
-    )
-  }
-}
-
 class AxisNode extends Node {
   static style = Style.from({ strokeStyle: colors.axisLine })
 
@@ -145,6 +130,7 @@ class PathAreaNode extends Node {
         positions: [0, 0, 0, chart.content.height],
         stops: [
           [0.0, colors.pathStroke + '44'],
+          [0.6, colors.pathStroke + '22'],
           [1.0, colors.pathStroke + '00'],
         ],
       }
@@ -171,18 +157,12 @@ export class LinearChart extends chart.Chart {
     this.layersByName.points.tags.add('path')
     this.layersByName.xLabels = new Layer([])
 
-    this.layersByName.debug = new Layer([
-      new DebugNode(),
-      // new Node(this.content, Style.from({ strokeStyle: colors.debug }))
-    ], TRANSFORM_EMPTY)
-
     this.layersByName.content.add(this.layersByName.path)
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
     this.layerRoot.add(this.layersByName.content)
     this.layerRoot.add(this.layersByName.axis)
-    // this.layerRoot.add(this.layersByName.debug)
 
     const drag = new DragBehavior(this, {
       onStart: () => {

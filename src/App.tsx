@@ -20,7 +20,7 @@ const weeks = byWeek.reduce((result, xs) => {
   return result
 }, [])
 
-const partial = weeks.slice(157)
+const partial = weeks.slice(120, 160)
 const dataset = new Dataset(
   partial,
   {
