@@ -1,11 +1,8 @@
 import type { Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
 import { Base } from './Base'
-import { TRANSFORM_EMPTY } from './constants'
 
 export class Layer extends Base {
-  transform: Matrix
-  mask: Base | null
 
   constructor(children: Base[] = [], transform?: Matrix, mask?: Base, alpha?: number) {
     super()
@@ -13,7 +10,7 @@ export class Layer extends Base {
     for (let i = 0; i < children.length; i++) {
       children[i].parent = this
     }
-    this.transform = transform ?? TRANSFORM_EMPTY
+    this.transform = transform ?? null
     this.mask = mask ?? null
     this.alpha = alpha ?? 1
   }
@@ -57,37 +54,61 @@ export class Layer extends Base {
   }
 
   render(graph: Graph) {
-    graph.ctx.save()
+    const needsContext = getNeedsContext(this)
 
-    if (this.transform) {
-      graph.ctx.transform(
-        this.transform.a,
-        this.transform.b,
-        this.transform.c,
-        this.transform.d,
-        this.transform.tx,
-        -this.transform.ty,
-      )
+    if (needsContext) {
+      prepareRender(graph, this)
     }
-
-    if (this.mask) {
-      graph.pencil.mask(this.mask)
-    }
-
-    graph.ctx.globalAlpha = graph.ctx.globalAlpha * this.alpha
 
     for (let j = 0; j < this.children.length; j++) {
-      const node = this.children[j]
-      if (node.alpha !== 1) {
-        graph.ctx.globalAlpha = graph.ctx.globalAlpha * node.alpha
-      }
-      node.render(graph)
-      if (node.alpha !== 1) {
-        graph.ctx.globalAlpha = graph.ctx.globalAlpha / node.alpha
+      const child = this.children[j]
+      if (child instanceof Layer) {
+        child.render(graph)
+      } else {
+        const needsContext = getNeedsContext(child)
+
+        if (needsContext) {
+          prepareRender(graph, child)
+        }
+
+        child.render(graph)
+
+        if (needsContext) {
+          graph.ctx.restore()
+        }
       }
     }
 
-    graph.ctx.restore()
+    if (needsContext) {
+      graph.ctx.restore()
+    }
+  }
+}
+
+function getNeedsContext(base: Base) {
+  return base.transform || base.alpha !== 1 || base.mask !== null
+}
+
+function prepareRender(graph: Graph, base: Base) {
+  graph.ctx.save()
+
+  if (base.transform) {
+    graph.ctx.transform(
+      base.transform.a,
+      base.transform.b,
+      base.transform.c,
+      base.transform.d,
+      base.transform.tx,
+      -base.transform.ty,
+    )
+  }
+
+  if (base.mask) {
+    graph.pencil.mask(base.mask)
+  }
+
+  if (base.alpha !== 1) {
+    graph.ctx.globalAlpha = graph.ctx.globalAlpha * base.alpha
   }
 }
 
