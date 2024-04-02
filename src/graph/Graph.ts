@@ -3,7 +3,7 @@ import { Dataset } from './Dataset'
 import { Base } from './Base'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
-import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
+import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 
 // <div class='ZenChart'>
 //   <canvas class='ZenChart__canvas' />
@@ -73,13 +73,13 @@ export class Graph {
     this.layerRoot.render(this)
   }
 
-  traverseWithTransform(fn: (element: Base, transform: Matrix) => void) {
-    const transforms = [this.transform]
-    let currentTransform = this.transform
+  traverseWithTransform(root: Base, fn: (element: Base, transform: Matrix) => void) {
+    const transforms = [Matrix.IDENTITY]
+    let currentTransform = transforms[0]
 
     function traverse(element: Base, fn: (element: Base, transform: Matrix) => void) {
       currentTransform =
-        element.transform === TRANSFORM_EMPTY ?
+        element.transform === Matrix.IDENTITY ?
           currentTransform :
           currentTransform.multiply(element.transform)
       transforms.push(currentTransform)
@@ -91,7 +91,7 @@ export class Graph {
       currentTransform = transforms[transforms.length - 1]
     }
 
-    traverse(this.layerRoot, fn)
+    traverse(root, fn)
   }
 }
 

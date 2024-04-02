@@ -1,7 +1,7 @@
-import { Bezier, Box, Path, Point, Segment, Circle } from '2d-geometry'
+import { Bezier, Box, Path, Matrix, Point, Segment, Circle } from '2d-geometry'
 import { Node, TextNode } from './Node'
 import { Dataset } from './Dataset'
-import { Layer, traverse } from './Layer'
+import { Layer } from './Layer'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
@@ -10,7 +10,7 @@ import { HoverBehavior } from './HoverBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
 import * as Interval from './interval'
-import { PIXEL_RATIO, TRANSFORM_EMPTY } from './constants'
+import { PIXEL_RATIO } from './constants'
 import * as chart from './Graph'
 import { Graph } from './Graph'
 
@@ -59,6 +59,34 @@ class AxisNode extends Node {
     )
   }
 }
+
+class GridNode extends Node {
+  static style = Style.from({ strokeStyle: '#ff000033' })
+
+  render(graph: Graph) {
+    const { pencil } = graph
+
+    pencil.style(GridNode.style)
+
+    for (let x = 0; x < graph.width; x += 100) {
+      pencil.drawShape(
+        new Segment(
+          x, 0,
+          x, graph.height,
+        )
+      )
+    }
+    for (let y = 1; y < graph.width; y += 100) {
+      pencil.drawShape(
+        new Segment(
+          0, y,
+          graph.width, y,
+        )
+      )
+    }
+  }
+}
+
 
 class PathNode extends Node {
   static style = Style.from({

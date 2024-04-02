@@ -12,7 +12,7 @@ export const Easing = {
 type Options = {
   from?: number,
   to?: number,
-  duration: number,
+  duration?: number,
   delay?: number,
   easing?: EasingFn,
 }
@@ -28,7 +28,7 @@ type AnimatePromise = Promise<void> & { cancel: Function }
  * never call `options.onChange` with a value outside `options.to`.
  */
 export default function animate(options: Options, onChange: AnimateCallback) {
-  const { from = 0, to = 1, duration, delay = 0, easing = Easing.EASE_IN_OUT } = options
+  const { from = 0, to = 1, duration = 250, delay = 0, easing = Easing.EASE_IN_OUT } = options
   const start = performance.now()
   let id = 0
 

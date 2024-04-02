@@ -1,6 +1,5 @@
-import type { Matrix } from '2d-geometry'
+import { Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
-import { TRANSFORM_EMPTY } from './constants'
 
 const EMPTY_CHILDREN = Object.freeze([]) as unknown as Base[]
 
@@ -16,7 +15,7 @@ export abstract class Base {
   constructor() {
     this.parent = null
     this.children = EMPTY_CHILDREN
-    this.transform = TRANSFORM_EMPTY
+    this.transform = Matrix.IDENTITY
     this.mask = null
     this.alpha = NaN
     this.alpha = 1
