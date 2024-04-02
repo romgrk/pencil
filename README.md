@@ -1,6 +1,7 @@
 # Pencil
 
-Canvas 2D drawing library.
+A canvas 2D drawing library, optimized for performance, bundle size and simplicity.
+
 
 ```typescript
 import { Graph, Layer, Node, Style } from 'pencil'
