@@ -11,9 +11,11 @@ class CustomGraph extends Graph {
   constructor(canvas) {
     super(canvas)
 
-    this.layersByName.content = new Layer([
-      new Node(new Circle(100, 100, 10), Style.from({ fillStyle: 'red' }))
-    ])
+    this.layerRoot.add(
+      new Layer([
+        new Node(new Circle(100, 100, 10), Style.from({ fillStyle: 'red' }))
+      ])
+    )
 
     this.render()
   }
@@ -21,3 +23,7 @@ class CustomGraph extends Graph {
 
 const newGraph = new CustomGraph(document.querySelector('canvas'))
 ```
+
+## License
+
+TBD - Do not use for now
