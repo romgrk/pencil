@@ -15,7 +15,7 @@ export function linearScale(
 
   let scale: LinearScale
   if (domain[0] === domain[1] || range[0] === range[1]) {
-    scale = ((value: number) => range[0]) as any
+    scale = ((_value: number) => range[0]) as any
   } else {
     const ratio = (range[1] - range[0]) / (domain[1] - domain[0])
 
