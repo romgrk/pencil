@@ -5,8 +5,8 @@ import { Layer } from './Layer'
 import { Pencil } from './Pencil'
 import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 
-// <div class='ZenChart'>
-//   <canvas class='ZenChart__canvas' />
+// <div class='PencilGraph'>
+//   <canvas />
 // </div>
 
 const CONTENT = `
@@ -24,7 +24,7 @@ export type Mixin = {
 }
 
 export class Graph {
-  root: HTMLElement
+  domNode: HTMLElement
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   pencil: Pencil
@@ -33,16 +33,16 @@ export class Graph {
   height: number
   transform: Matrix
 
-  layerRoot: Layer
+  root: Layer
   layersByName: Record<string, Layer>
 
   mixins: Mixin[]
 
   constructor(root: HTMLElement, options?: Options) {
-    this.root = root
-    this.root.classList.add('ZenChart')
-    this.root.innerHTML = CONTENT
-    this.canvas = this.root.querySelector('canvas')!
+    this.domNode = root
+    this.domNode.classList.add('PencilGraph')
+    this.domNode.innerHTML = CONTENT
+    this.canvas = this.domNode.querySelector('canvas')!
     this.ctx = this.canvas.getContext('2d')!
     this.pencil = new Pencil(this)
 
@@ -56,9 +56,9 @@ export class Graph {
 
     this.transform = TRANSFORM_PIXEL_RATIO
 
-    this.layerRoot = new Layer()
+    this.root = new Layer()
     this.layersByName = {
-      root: this.layerRoot
+      root: this.root
     }
 
     this.mixins = []
@@ -70,7 +70,7 @@ export class Graph {
 
   render() {
     this.pencil.clear()
-    this.layerRoot.render(this)
+    this.root.render(this)
   }
 
   traverseWithTransform(root: Base, fn: (element: Base, transform: Matrix) => void) {

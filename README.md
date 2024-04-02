@@ -11,7 +11,7 @@ class CustomGraph extends Graph {
   constructor(canvas) {
     super(canvas)
 
-    this.layerRoot.add(
+    this.root.add(
       new Layer([
         new Node(new Circle(100, 100, 10), Style.from({ fillStyle: 'red' }))
       ])

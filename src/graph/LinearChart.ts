@@ -214,17 +214,17 @@ export class LinearChart extends chart.Graph {
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
-    this.layerRoot.add(new Layer([new GridNode()]))
-    this.layerRoot.add(this.layersByName.content)
-    this.layerRoot.add(this.layersByName.axis)
+    this.root.add(new Layer([new GridNode()]))
+    this.root.add(this.layersByName.content)
+    this.root.add(this.layersByName.axis)
 
     const cursorShape = new Circle(100, 100, 10)
     const cursor = new Node(cursorShape, Style.from({ strokeStyle: 'red' }))
-    this.layerRoot.add(new Layer([cursor]))
+    this.root.add(new Layer([cursor]))
 
     const drag = new DragBehavior(this, {
       onStart: () => {
-        this.layerRoot.queryAll('path').forEach(p => {
+        this.root.queryAll('path').forEach(p => {
           p.alpha = 0.7
         })
         this.render()
@@ -235,7 +235,7 @@ export class LinearChart extends chart.Graph {
         this.render()
       },
       onEnd: () => {
-        this.layerRoot.queryAll('path').forEach(p => {
+        this.root.queryAll('path').forEach(p => {
           p.alpha = 1
         })
         this.render()
