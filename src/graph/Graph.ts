@@ -10,7 +10,7 @@ import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 // </div>
 
 const CONTENT = `
-  <canvas class="ZenChart__canvas" />
+  <canvas />
 `
 
 export type Options = {
