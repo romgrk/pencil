@@ -45,13 +45,13 @@ class AxisNode extends Node {
     const { pencil } = chart
 
     pencil.style(AxisNode.style)
-    pencil.drawShape(
+    pencil.draw(
       new Segment(
         AXIS_ORIGIN,
         AXIS_ORIGIN.translate(0, this.factor * (chart.height - 2 * PADDING)),
       )
     )
-    pencil.drawShape(
+    pencil.draw(
       new Segment(
         AXIS_ORIGIN,
         AXIS_ORIGIN.translate(this.factor * (chart.width - 2 * PADDING), 0),
@@ -69,7 +69,7 @@ class GridNode extends Node {
     pencil.style(GridNode.style)
 
     for (let x = 0; x < graph.width; x += 100) {
-      pencil.drawShape(
+      pencil.draw(
         new Segment(
           x, 0,
           x, graph.height,
@@ -77,7 +77,7 @@ class GridNode extends Node {
       )
     }
     for (let y = 1; y < graph.width; y += 100) {
-      pencil.drawShape(
+      pencil.draw(
         new Segment(
           0, y,
           graph.width, y,
@@ -192,8 +192,10 @@ export class LinearChart extends chart.Graph {
       ),
     }
 
-
-    this.layersByName.content = new Layer([], TRANSFORM_EMPTY.translate(this.content.xmin, this.content.ymin))
+    this.layersByName.content = new Layer(
+      [],
+      Matrix.IDENTITY.translate(this.content.xmin, this.content.ymin)
+    )
 
     const axisNode = new AxisNode()
     this.layersByName.axis = new Layer([axisNode])
@@ -212,8 +214,13 @@ export class LinearChart extends chart.Graph {
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
+    this.layerRoot.add(new Layer([new GridNode()]))
     this.layerRoot.add(this.layersByName.content)
     this.layerRoot.add(this.layersByName.axis)
+
+    const cursorShape = new Circle(100, 100, 10)
+    const cursor = new Node(cursorShape, Style.from({ strokeStyle: 'red' }))
+    this.layerRoot.add(new Layer([cursor]))
 
     const drag = new DragBehavior(this, {
       onStart: () => {
@@ -269,6 +276,35 @@ export class LinearChart extends chart.Graph {
       },
     })
     scroll.enable()
+    this.mixins.push(scroll)
+
+    const hover = new HoverBehavior(this, {
+      onPointerMove: (position) => {
+
+        cursorShape.pc.x = position.x
+        cursorShape.pc.y = position.y
+
+        this.traverseWithTransform(this.layersByName.content, (element, transform) => {
+          if (element instanceof Node) {
+            const currentPosition = position.transform(transform.invert())
+
+            if (element.shape.contains(currentPosition)) {
+              animate({ from: (element.shape as any).r, to: 6 }, (r) => {
+                (element.shape as any).r = r
+                this.render()
+              })
+            }
+          }
+        })
+
+        this.render()
+      },
+    })
+    hover.enable()
+    this.mixins.push(hover)
+
+
+    // Setup
 
     pathNode.shape = Path.EMPTY
     pathAreaNode.alpha = 0

@@ -22,7 +22,7 @@ export class Node extends Base {
 
   render(graph: Graph) {
     graph.pencil.style(this.style)
-    graph.pencil.drawShape(this.shape)
+    graph.pencil.draw(this.shape)
   }
 }
 

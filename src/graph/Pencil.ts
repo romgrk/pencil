@@ -69,26 +69,26 @@ export class Pencil {
     this.ctx.clip()
   }
 
-  drawShape(s: Shape) {
+  draw(s: Shape) {
     if (this.isMasking) {
       this.ctx.beginPath()
-      this.drawShapePath(s)
+      this.drawPath(s)
       this.ctx.closePath()
       return 
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
-      this.drawShapePath(s)
+      this.drawPath(s)
       this.ctx.fill()
     }
     if (this.lastStyle.options.strokeStyle) {
       this.ctx.beginPath()
-      this.drawShapePath(s)
+      this.drawPath(s)
       this.ctx.stroke()
     }
   }
 
-  drawShapePath(s: Shape, move: boolean = true) {
+  drawPath(s: Shape, move: boolean = true) {
     if (s instanceof Box) {
       this.ctx.rect(s.xmin, this.y(s.ymin) - s.height, s.width, s.height)
     }
@@ -114,7 +114,7 @@ export class Pencil {
       this.ctx.moveTo(start.x, this.y(start.y))
 
       for (let i = 0; i < s.parts.length; i++) {
-        this.drawShapePath(s.parts[i], false)
+        this.drawPath(s.parts[i], false)
       }
     }
     else {
@@ -125,7 +125,7 @@ export class Pencil {
   drawPoint(s: Point, r: number = 3) {
     if (this.isMasking) {
       this.ctx.beginPath()
-      return this.drawShapePath(s)
+      return this.drawPath(s)
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
