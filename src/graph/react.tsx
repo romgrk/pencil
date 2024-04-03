@@ -1,29 +1,20 @@
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import * as graph from './Graph'
-import * as linear from './LinearChart'
 
-export function Graph(props: graph.Options) {
+type GraphType = typeof graph.Graph
+
+function GraphContainerImpl<T extends GraphType>(props: { type: T } & ConstructorParameters<GraphType>[1]) {
   const domNode = useRef<HTMLDivElement>()
   const instance = useRef<graph.Graph>()
 
   useEffect(() => {
-    instance.current = new graph.Graph(domNode.current!, props)
-  }, [])
+    instance.current = new props.type(domNode.current!, props)
+    return () => instance.current?.destroy()
+  }, [props.type])
 
   return (
     <div ref={domNode as any} />
   )
 }
 
-export function LinearChart(props: linear.Options) {
-  const domNode = useRef<HTMLDivElement>()
-  const instance = useRef<linear.LinearChart>()
-
-  useEffect(() => {
-    instance.current = new linear.LinearChart(domNode.current!, props)
-  }, [])
-
-  return (
-    <div ref={domNode as any} />
-  )
-}
+export const GraphContainer = memo(GraphContainerImpl)
