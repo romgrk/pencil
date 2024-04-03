@@ -56,6 +56,6 @@ export default function animate(options: Options, onChange: AnimateCallback) {
   return promise
 }
 
-export function lerp(factor: number, a: number, b: number) {
+function lerp(factor: number, a: number, b: number) {
   return a * (1 - factor) + b * factor
 }

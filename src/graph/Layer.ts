@@ -1,6 +1,8 @@
-import { Matrix } from '2d-geometry'
+import { Point, Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
 import { Base } from './Base'
+import { Node } from './Node'
+import { traverse } from './traverse'
 
 export class Layer extends Base {
 
@@ -109,13 +111,5 @@ function prepareRender(graph: Graph, base: Base) {
 
   if (base.alpha !== 1) {
     graph.ctx.globalAlpha = graph.ctx.globalAlpha * base.alpha
-  }
-}
-
-
-export function traverse(b: Base, fn: (b: Base) => void) {
-  fn(b)
-  if (b instanceof Layer) {
-    b.children.forEach(c => traverse(c, fn))
   }
 }

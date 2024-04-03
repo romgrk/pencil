@@ -9,6 +9,7 @@ import { ScrollBehavior } from './ScrollBehavior'
 import { HoverBehavior } from './HoverBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import animate, { Easing } from './animate'
+import { traverseWithTransform } from './traverse'
 import * as Interval from './interval'
 import { PIXEL_RATIO } from './constants'
 import * as chart from './Graph'
@@ -284,13 +285,13 @@ export class LinearChart extends chart.Graph {
         cursorShape.pc.x = position.x
         cursorShape.pc.y = position.y
 
-        this.traverseWithTransform(this.layersByName.content, (element, transform) => {
+        traverseWithTransform(this.layersByName.content, (element, transform) => {
           if (element instanceof Node) {
             const currentPosition = position.transform(transform.invert())
 
             if (element.shape.contains(currentPosition)) {
-              animate({ from: (element.shape as any).r, to: 6 }, (r) => {
-                (element.shape as any).r = r
+              animate({ from: 1, to: 2 }, (scale) => {
+                element.transform = Matrix.IDENTITY.scale(scale, scale)
                 this.render()
               })
             }

@@ -1,6 +1,5 @@
 import { Matrix } from '2d-geometry'
 import { Dataset } from './Dataset'
-import { Base } from './Base'
 import { Layer } from './Layer'
 import { Pencil } from './Pencil'
 import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
@@ -71,27 +70,6 @@ export class Graph {
   render() {
     this.pencil.clear()
     this.root.render(this)
-  }
-
-  traverseWithTransform(root: Base, fn: (element: Base, transform: Matrix) => void) {
-    const transforms = [Matrix.IDENTITY]
-    let currentTransform = transforms[0]
-
-    function traverse(element: Base, fn: (element: Base, transform: Matrix) => void) {
-      currentTransform =
-        element.transform === Matrix.IDENTITY ?
-          currentTransform :
-          currentTransform.multiply(element.transform)
-      transforms.push(currentTransform)
-      fn(element, currentTransform)
-      for (let i = 0; i < element.children.length; i++) {
-        traverse(element.children[i], fn)
-      }
-      transforms.pop()
-      currentTransform = transforms[transforms.length - 1]
-    }
-
-    traverse(root, fn)
   }
 }
 
