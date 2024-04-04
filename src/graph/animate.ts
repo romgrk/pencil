@@ -16,8 +16,8 @@ type Options = {
   easing?: EasingFn,
 }
 
-type AnimateCallback = (value: number, done: boolean) => void
-type AnimatePromise = Promise<void> & { cancel: Function }
+export type AnimateCallback = (value: number, done: boolean) => void
+export type AnimatePromise = Promise<void> & { cancel: Function }
 
 /**
  * Animate a value using `requestAnimationFrame()`. This function does not

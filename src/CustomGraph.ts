@@ -85,7 +85,7 @@ export class CustomGraph extends Graph {
         cursor.x = position.x
         cursor.y = position.y
 
-        traverseWithTransform(this.root, (element, transform) => {
+        traverseWithTransform(this.root, (element, _transform) => {
           if (element instanceof Node) {
             // const currentPosition = position.transform(transform.invert())
             //

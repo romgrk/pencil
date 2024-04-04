@@ -1,8 +1,10 @@
+type Fn = (value: number) => number
 
 export type LinearScale = {
   (value: number): number
   domain: [number, number]
   range: [number, number]
+  inverse: Fn
 }
 
 /**
@@ -12,6 +14,19 @@ export function linearScale(
   domain: [number, number],
   range: [number, number],
 ): LinearScale {
+
+  let scale: LinearScale = getScale(domain, range) as any
+  scale.domain = domain
+  scale.range = range
+  scale.inverse = getScale(range, domain)
+
+  return scale
+}
+
+function getScale(
+  domain: [number, number],
+  range: [number, number],
+): Fn {
 
   let scale: LinearScale
   if (domain[0] === domain[1] || range[0] === range[1]) {
@@ -23,9 +38,6 @@ export function linearScale(
       return range[0] + ratio * (value - domain[0]);
     }) as any
   }
-
-  scale.domain = domain
-  scale.range = range
 
   return scale
 }

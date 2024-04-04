@@ -1,4 +1,4 @@
-import { Bezier, Box, Path, Matrix, Point, Segment, Circle } from '2d-geometry'
+import { Bezier, Box, Path, Matrix, Point, Segment, Circle, lerp } from '2d-geometry'
 import { Node, Text } from './Node'
 import { Base } from './Base'
 import { Dataset } from './Dataset'
@@ -11,6 +11,7 @@ import { HoverBehavior } from './HoverBehavior'
 import { linearScale, LinearScale } from './linearScale'
 import { animate, Easing } from './animate'
 import { traverseWithTransform } from './traverse'
+import { positionInObject } from './position'
 import * as Interval from './interval'
 import { PIXEL_RATIO } from './constants'
 import * as elements from './elements'
@@ -28,18 +29,16 @@ const colors = {
 }
 
 const PADDING = 50
-const AXIS_ORIGIN = new Point(PADDING, PADDING)
 
+const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
+const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
 const LABEL_TEXT_STYLE = TextStyle.from({
   font: '16px serif',
   textAlign: 'center',
   textBaseline: 'top',
 })
-const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
 
-const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
-
-class AxisNode extends Node {
+class AxisLines extends Node {
   static style = Style.from({ strokeStyle: colors.axisLine })
 
   factor: number = 1
@@ -47,17 +46,19 @@ class AxisNode extends Node {
   render(chart: Graph) {
     const { pencil } = chart
 
-    pencil.style(AxisNode.style)
+    const origin = new Point(PADDING, chart.height - PADDING)
+
+    pencil.style(AxisLines.style)
     pencil.draw(
       new Segment(
-        AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(0, this.factor * (chart.height - 2 * PADDING)),
+        origin,
+        origin.translate(0, this.factor * -(chart.height - 2 * PADDING)),
       )
     )
     pencil.draw(
       new Segment(
-        AXIS_ORIGIN,
-        AXIS_ORIGIN.translate(this.factor * (chart.width - 2 * PADDING), 0),
+        origin,
+        origin.translate(this.factor * (chart.width - 2 * PADDING), 0),
       )
     )
   }
@@ -116,16 +117,16 @@ class PathAreaNode extends Node {
 
     const path = PathNode.buildPath(chart, dataset)
     path.parts.unshift(new Segment(
-      new Point(path.parts[0].start.x, 0),
+      new Point(path.parts[0].start.x, chart.content.height),
       path.parts[0].start,
     ))
     path.parts.push(new Segment(
       path.parts[path.parts.length - 1].end,
-      new Point(path.parts[path.parts.length - 1].end.x, 0),
+      new Point(path.parts[path.parts.length - 1].end.x, chart.content.height),
     ))
     path.parts.push(new Segment(
       path.parts[path.parts.length - 1].end,
-      new Point(path.parts[path.parts.length - 1].end.x, 0),
+      new Point(path.parts[path.parts.length - 1].end.x, chart.content.height),
     ))
 
     this.shape = path
@@ -133,9 +134,9 @@ class PathAreaNode extends Node {
       fillStyle: {
         positions: [0, 0, 0, chart.content.height],
         stops: [
-          [0.0, colors.pathStroke + '55'],
-          [0.6, colors.pathStroke + '22'],
-          [1.0, colors.pathStroke + '0A'],
+          [0.0, colors.pathStroke + '11'],
+          [0.6, colors.pathStroke + '11'],
+          [1.0, colors.pathStroke + '11'],
         ],
       }
     })
@@ -163,16 +164,17 @@ export class LinearChart extends chart.Graph {
       ),
       y: linearScale(
         [this.dataset.stats.range.minY / 4, this.dataset.stats.range.maxY * 1.1],
-        [0, this.content.height]
+        [this.content.height, 0]
       ),
     }
 
-    this.layersByName.content = new Container(
+    this.layersByName.container = new Container(
       [],
       Matrix.IDENTITY.translate(this.content.xmin, this.content.ymin)
     )
+    this.layersByName.content = new Container([])
 
-    const axisNode = new AxisNode()
+    const axisNode = new AxisLines()
     this.layersByName.axis = new Container([axisNode])
 
     const pathNode = new PathNode(this, this.dataset)
@@ -189,8 +191,10 @@ export class LinearChart extends chart.Graph {
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
+    this.layersByName.container.add(this.layersByName.content)
+
     this.root.add(new Container([new elements.Grid()]))
-    this.root.add(this.layersByName.content)
+    this.root.add(this.layersByName.container)
     this.root.add(this.layersByName.axis)
 
     const cursorShape = new Circle(100, 100, 10)
@@ -219,6 +223,7 @@ export class LinearChart extends chart.Graph {
     drag.enable()
     this.mixins.push(drag)
 
+    let scrollAnimation: Promise<void> | undefined
     const scroll = new ScrollBehavior(this, {
       onScrollHorizontal: (event) => {
         const content = this.layersByName.content
@@ -226,28 +231,56 @@ export class LinearChart extends chart.Graph {
           event.deltaX / PIXEL_RATIO,
           0
         )
+        // FIXME:
+        // content.transform.tx = Math.min(content.transform.tx, 100)
+        // content.transform.tx = Math.max(content.transform.tx, -100)
         this.render()
       },
       onScrollVertical: (event) => {
-        const rangeWidth = this.scale.x.range[1] - this.scale.x.range[0]
-        const dw = rangeWidth * 0.01 * (event.deltaY > 0 ? -1 : 1)
+        if (scrollAnimation) {
+          return
+        }
+        if (event.deltaX !== 0) {
+          return
+        }
 
-        const range = Interval.clampWidth([
-          this.scale.x.range[0] - dw,
-          this.scale.x.range[1] + dw,
-        ] as [number, number], 400, 2_500)
+        const position = positionInObject(this.layersByName.content, event)
 
-        const xScale = linearScale(this.scale.x.domain, range)
-        this.scale.x = xScale
+        const currentWidth = this.scale.x.domain[1] - this.scale.x.domain[0]
+        const nextWidth = currentWidth * (event.deltaY < 0 ? 0.5 : 2)
 
-        const pathNode = new PathNode(this, this.dataset)
-        const pathAreaNode = new PathAreaNode(this, this.dataset)
-        this.layersByName.path.clear()
-        this.layersByName.path.add(pathNode)
-        this.layersByName.path.add(pathAreaNode)
+        const n = position.x / (this.scale.x.range[1] - this.scale.x.range[0])
 
-        this.populateDataset()
-        this.render()
+        const center = this.scale.x.domain[0] + currentWidth * n
+
+        const extent = this.dataset.stats.range.maxX - this.dataset.stats.range.minX
+        if (nextWidth < extent / 10 || nextWidth > extent) {
+          return
+        }
+
+        scrollAnimation = animate({
+          from: 0,
+          to: 1,
+        }, (f) => {
+          const domainWidth = lerp(currentWidth, nextWidth, f)
+          const domain = Interval.clampWidth([
+            center - domainWidth * n,
+            center + domainWidth * (1 - n),
+          ] as [number, number], extent / 10, extent)
+
+          this.scale.x = linearScale(domain, this.scale.x.range)
+
+          const pathNode = new PathNode(this, this.dataset)
+          const pathAreaNode = new PathAreaNode(this, this.dataset)
+          this.layersByName.path.clear()
+          this.layersByName.path.add(pathNode)
+          this.layersByName.path.add(pathAreaNode)
+
+          this.populateDataset()
+
+          this.render()
+        })
+        .then(() => { scrollAnimation = undefined })
       },
     })
     scroll.enable()
@@ -260,12 +293,12 @@ export class LinearChart extends chart.Graph {
         cursorShape.pc.y = position.y
 
         traverseWithTransform(this.layersByName.content, (element, transform) => {
-          if (element instanceof Node) {
+          if (element.tags?.has('point')) {
             const currentPosition = position.transform(transform.invert())
 
-            if (element.shape.contains(currentPosition)) {
-              animate({ from: 1, to: 2 }, (scale) => {
-                element.transform = Matrix.IDENTITY.scale(scale, scale)
+            if ((element.children[0] as Node).shape.contains(currentPosition)) {
+              animate({ from: element.scale, to: 2 }, (scale) => {
+                element.scale = scale
                 this.render()
               })
             }
@@ -335,20 +368,33 @@ export class LinearChart extends chart.Graph {
       const entry = dataset.entries[i]
       const x = this.scale.x(dataset.xGet(entry))
       const y = this.scale.y(dataset.yGet(entry))
-      points.add(new Node(
-        new Circle(new Point(x, y), r),
-        Style.from({ fillStyle: colors.pointFill })
-      ))
+
+      const point = new Container([
+        new Node(
+          new Circle(0, 0, r), Style.from({ fillStyle: colors.pointFill })
+        )
+      ])
+      point.addTag('point')
+      point.x = x
+      point.y = y
+
+      points.add(point)
+
       if (lastLabelX < x) {
         const textNode = new Text(
           dataset.xLabel(entry),
-          new Point(x, -5),
+          new Point(x, this.content.height + 5),
           LABEL_TEXT_STYLE,
           LABEL_STYLE,
         )
         lastLabelX = x + textNode.dimensions.width + 40
         xLabels.add(new Container([
-          new Node(new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
+          new Node(new Segment(
+            x,
+            -3 + this.content.height,
+            x,
+            3 + this.content.height,
+          ), AXIS_TICK_STYLE),
           textNode,
         ]))
       }
