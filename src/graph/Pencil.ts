@@ -1,4 +1,4 @@
-import { Circle, Bezier, Box, Path, Point, Segment, Shape } from '2d-geometry'
+import { Circle, Bezier, Box, Path, Point, Segment, Shape, ShapeTag } from '2d-geometry'
 import type { Base } from './Base'
 import type { Graph } from './Graph'
 import { PIXEL_RATIO } from './constants'
@@ -24,7 +24,16 @@ export class Pencil {
     this.isMasking = false
   }
 
-  y(n: number) { return this.graph.height - n }
+  save() {
+    this.ctx.save()
+  }
+
+  restore() {
+    this.ctx.restore()
+    this.lastStyleId = -1
+    this.lastTextStyleId = -1
+  }
+
 
   style(s: Style) {
     if (this.lastStyleId === s.id) {
@@ -33,8 +42,8 @@ export class Pencil {
     this.lastStyleId = s.id
     this.lastStyle = s
     this.ctx.lineWidth = s.options.lineWidth
-    this.ctx.strokeStyle = s.strokeStyle(this.ctx)
-    this.ctx.fillStyle = s.fillStyle(this.ctx)
+    s.strokeStyle(this.ctx)
+    s.fillStyle(this.ctx)
   }
 
   textStyle(s: TextStyle) {
@@ -49,7 +58,7 @@ export class Pencil {
     this.ctx.textBaseline = s.options.textBaseline
   }
 
-  clear() {
+  setup() {
     this.ctx.resetTransform()
     this.ctx.clearRect(0, 0, this.graph.width * PIXEL_RATIO, this.graph.height * PIXEL_RATIO)
     this.ctx.setTransform(
@@ -74,7 +83,7 @@ export class Pencil {
       this.ctx.beginPath()
       this.drawPath(s)
       this.ctx.closePath()
-      return 
+      return
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
@@ -88,37 +97,49 @@ export class Pencil {
     }
   }
 
-  drawPath(s: Shape, move: boolean = true) {
-    if (s instanceof Box) {
-      this.ctx.rect(s.xmin, this.y(s.ymin) - s.height, s.width, s.height)
-    }
-    else if (s instanceof Segment) {
-      if (move)
-      this.ctx.moveTo(s.start.x, this.y(s.start.y))
-      this.ctx.lineTo(s.end.x,   this.y(s.end.y))
-    }
-    else if (s instanceof Circle) {
-      this.ctx.ellipse(s.center.x, this.y(s.center.y), s.r, s.r, 0, 0, Math.PI * 2)
-    }
-    else if (s instanceof Bezier) {
-      if (move)
-      this.ctx.moveTo(s.start.x, this.y(s.start.y))
-      this.ctx.bezierCurveTo(
-        s.control1.x, this.y(s.control1.y),
-        s.control2.x, this.y(s.control2.y),
-        s.end.x, this.y(s.end.y),
-      )
-    }
-    else if (s instanceof Path) {
-      const start = s.pointAtLength(0)
-      this.ctx.moveTo(start.x, this.y(start.y))
-
-      for (let i = 0; i < s.parts.length; i++) {
-        this.drawPath(s.parts[i], false)
+  drawPath(shape: Shape, move: boolean = true) {
+    switch (shape.tag) {
+      case ShapeTag.Box: {
+        const s = shape as Box
+        this.ctx.rect(s.xmin, s.ymin - s.height, s.width, s.height)
+        break
       }
-    }
-    else {
-      throw new Error('unimplemented')
+      case ShapeTag.Segment: {
+        const s = shape as Segment
+        if (move)
+          this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.lineTo(s.end.x,   s.end.y)
+        break
+      }
+      case ShapeTag.Circle: {
+        const s = shape as Circle
+        this.ctx.ellipse(s.center.x, s.center.y, s.r, s.r, 0, 0, Math.PI * 2)
+        break
+      }
+      case ShapeTag.Bezier: {
+        const s = shape as Bezier
+        if (move)
+          this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.bezierCurveTo(
+          s.control1.x, s.control1.y,
+          s.control2.x, s.control2.y,
+          s.end.x, s.end.y,
+        )
+        break
+      }
+      case ShapeTag.Path: {
+        const s = shape as Path
+        const start = s.pointAtLength(0)
+        this.ctx.moveTo(start.x, start.y)
+
+        for (let i = 0; i < s.parts.length; i++) {
+          this.drawPath(s.parts[i], false)
+        }
+        break
+      }
+      default: {
+        throw new Error('unimplemented')
+      }
     }
   }
 
@@ -129,24 +150,22 @@ export class Pencil {
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
-      this.ctx.ellipse(s.x, this.y(s.y), r, r, 0, 0, Math.PI * 2)
+      this.ctx.ellipse(s.x, s.y, r, r, 0, 0, Math.PI * 2)
       this.ctx.fill()
     }
     if (this.lastStyle.options.strokeStyle) {
       this.ctx.beginPath()
-      this.ctx.ellipse(s.x, this.y(s.y), r, r, 0, 0, Math.PI * 2)
+      this.ctx.ellipse(s.x, s.y, r, r, 0, 0, Math.PI * 2)
       this.ctx.stroke()
     }
   }
 
   drawText(value: string, position: Point) {
     if (this.lastStyle.options.fillStyle) {
-      this.ctx.fillText(value, position.x, this.y(position.y))
+      this.ctx.fillText(value, position.x, position.y)
     }
     if (this.lastStyle.options.strokeStyle) {
-      this.ctx.strokeText(value, position.x, this.y(position.y))
+      this.ctx.strokeText(value, position.x, position.y)
     }
   }
-
 }
-

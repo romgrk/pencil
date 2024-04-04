@@ -26,7 +26,7 @@ export class Node extends Base {
   }
 }
 
-export class TextNode extends Node {
+export class Text extends Node {
   static STYLE = Style.from({ fillStyle: 'black' })
 
   readonly text: string
@@ -38,10 +38,10 @@ export class TextNode extends Node {
     text: string | number,
     position: Point,
     textStyle: TextStyle,
-    style: Style = TextNode.STYLE,
+    style: Style = Text.STYLE,
   ) {
     super()
-    this.style = style ?? TextNode.STYLE
+    this.style = style ?? Text.STYLE
     this.text = String(text)
     this.textStyle = textStyle
     this.position = position
@@ -62,4 +62,3 @@ export class TextNode extends Node {
     pencil.drawText(this.text, this.position)
   }
 }
-

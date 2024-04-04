@@ -4,7 +4,7 @@ A canvas 2D drawing library, optimized for performance, bundle size and simplici
 
 
 ```typescript
-import { Graph, Layer, Node, Style } from 'pencil'
+import { Graph, Container, Node, Style } from 'pencil'
 import { Circle } from '2d-geometry'
 
 class CustomGraph extends Graph {
@@ -12,7 +12,7 @@ class CustomGraph extends Graph {
     super(canvas)
 
     this.root.add(
-      new Layer([
+      new Container([
         new Node(new Circle(100, 100, 10), Style.from({ fillStyle: 'red' }))
       ])
     )

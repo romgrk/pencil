@@ -85,22 +85,24 @@ export class Style {
 
   strokeStyle(ctx: CanvasRenderingContext2D) {
     if (this.options.strokeStyle === null) {
-      return 'black'
+      return
     }
     if (typeof this.options.strokeStyle === 'string') {
-      return this.options.strokeStyle
+      ctx.strokeStyle = this.options.strokeStyle
+      return
     }
-    return Style.linearGradient(ctx, this.options.strokeStyle)
+    ctx.strokeStyle = Style.linearGradient(ctx, this.options.strokeStyle)
   }
 
   fillStyle(ctx: CanvasRenderingContext2D) {
     if (this.options.fillStyle === null) {
-      return 'black'
+      return
     }
     if (typeof this.options.fillStyle === 'string') {
-      return this.options.fillStyle
+      ctx.fillStyle = this.options.fillStyle
+      return
     }
-    return Style.linearGradient(ctx, this.options.fillStyle)
+    ctx.fillStyle = Style.linearGradient(ctx, this.options.fillStyle)
   }
 }
 

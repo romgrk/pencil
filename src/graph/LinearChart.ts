@@ -1,7 +1,8 @@
 import { Bezier, Box, Path, Matrix, Point, Segment, Circle } from '2d-geometry'
-import { Node, TextNode } from './Node'
+import { Node, Text } from './Node'
+import { Base } from './Base'
 import { Dataset } from './Dataset'
-import { Layer } from './Layer'
+import { Container } from './Container'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { DragBehavior } from './DragBehavior'
@@ -12,6 +13,7 @@ import animate, { Easing } from './animate'
 import { traverseWithTransform } from './traverse'
 import * as Interval from './interval'
 import { PIXEL_RATIO } from './constants'
+import * as elements from './elements'
 import * as chart from './Graph'
 import { Graph } from './Graph'
 
@@ -60,34 +62,6 @@ class AxisNode extends Node {
     )
   }
 }
-
-class GridNode extends Node {
-  static style = Style.from({ strokeStyle: '#ff000033' })
-
-  render(graph: Graph) {
-    const { pencil } = graph
-
-    pencil.style(GridNode.style)
-
-    for (let x = 0; x < graph.width; x += 100) {
-      pencil.draw(
-        new Segment(
-          x, 0,
-          x, graph.height,
-        )
-      )
-    }
-    for (let y = 1; y < graph.width; y += 100) {
-      pencil.draw(
-        new Segment(
-          0, y,
-          graph.width, y,
-        )
-      )
-    }
-  }
-}
-
 
 class PathNode extends Node {
   static style = Style.from({
@@ -193,39 +167,39 @@ export class LinearChart extends chart.Graph {
       ),
     }
 
-    this.layersByName.content = new Layer(
+    this.layersByName.content = new Container(
       [],
       Matrix.IDENTITY.translate(this.content.xmin, this.content.ymin)
     )
 
     const axisNode = new AxisNode()
-    this.layersByName.axis = new Layer([axisNode])
+    this.layersByName.axis = new Container([axisNode])
 
     const pathNode = new PathNode(this, this.dataset)
     const pathAreaNode = new PathAreaNode(this, this.dataset)
-    this.layersByName.path = new Layer([
+    this.layersByName.path = new Container([
       pathNode,
       pathAreaNode,
     ])
-    this.layersByName.points = new Layer([])
+    this.layersByName.points = new Container([])
     this.layersByName.points.addTag('path')
-    this.layersByName.xLabels = new Layer([])
+    this.layersByName.xLabels = new Container([])
 
     this.layersByName.content.add(this.layersByName.path)
     this.layersByName.content.add(this.layersByName.points)
     this.layersByName.content.add(this.layersByName.xLabels)
 
-    this.root.add(new Layer([new GridNode()]))
+    this.root.add(new Container([new elements.Grid()]))
     this.root.add(this.layersByName.content)
     this.root.add(this.layersByName.axis)
 
     const cursorShape = new Circle(100, 100, 10)
     const cursor = new Node(cursorShape, Style.from({ strokeStyle: 'red' }))
-    this.root.add(new Layer([cursor]))
+    this.root.add(new Container([cursor]))
 
     const drag = new DragBehavior(this, {
       onStart: () => {
-        this.root.queryAll('path').forEach(p => {
+        this.root.queryAll('path').forEach((p: Base) => {
           p.alpha = 0.7
         })
         this.render()
@@ -236,7 +210,7 @@ export class LinearChart extends chart.Graph {
         this.render()
       },
       onEnd: () => {
-        this.root.queryAll('path').forEach(p => {
+        this.root.queryAll('path').forEach((p: Base) => {
           p.alpha = 1
         })
         this.render()
@@ -366,14 +340,14 @@ export class LinearChart extends chart.Graph {
         Style.from({ fillStyle: colors.pointFill })
       ))
       if (lastLabelX < x) {
-        const textNode = new TextNode(
+        const textNode = new Text(
           dataset.xLabel(entry),
           new Point(x, -5),
           LABEL_TEXT_STYLE,
           LABEL_STYLE,
         )
         lastLabelX = x + textNode.dimensions.width + 40
-        xLabels.add(new Layer([
+        xLabels.add(new Container([
           new Node(new Segment(x, -3, x, 3), AXIS_TICK_STYLE),
           textNode,
         ]))

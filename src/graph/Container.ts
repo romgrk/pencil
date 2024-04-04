@@ -1,10 +1,9 @@
-import { Point, Matrix } from '2d-geometry'
+import { Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
 import { Base } from './Base'
-import { Node } from './Node'
 import { traverse } from './traverse'
 
-export class Layer extends Base {
+export class Container extends Base {
 
   constructor(children: Base[] = [], transform?: Matrix, mask?: Base, alpha?: number) {
     super()
@@ -12,7 +11,7 @@ export class Layer extends Base {
     for (let i = 0; i < children.length; i++) {
       children[i].parent = this
     }
-    this.transform = transform ?? Matrix.IDENTITY
+    this.transform = transform ?? Matrix.IDENTITY.clone()
     this.mask = mask ?? null
     this.alpha = alpha ?? 1
   }
@@ -64,7 +63,7 @@ export class Layer extends Base {
 
     for (let j = 0; j < this.children.length; j++) {
       const child = this.children[j]
-      if (child instanceof Layer) {
+      if (child instanceof Container) {
         child.render(graph)
       } else {
         const needsContext = getNeedsContext(child)
@@ -76,32 +75,32 @@ export class Layer extends Base {
         child.render(graph)
 
         if (needsContext) {
-          graph.ctx.restore()
+          graph.pencil.restore()
         }
       }
     }
 
     if (needsContext) {
-      graph.ctx.restore()
+      graph.pencil.restore()
     }
   }
 }
 
 function getNeedsContext(base: Base) {
-  return base.transform !== Matrix.IDENTITY || base.alpha !== 1 || base.mask !== null
+  return !base.transform.isIdentity() || base.alpha !== 1 || base.mask !== null
 }
 
 function prepareRender(graph: Graph, base: Base) {
-  graph.ctx.save()
+  graph.pencil.save()
 
-  if (base.transform !== Matrix.IDENTITY) {
+  if (!base.transform.isIdentity()) {
     graph.ctx.transform(
       base.transform.a,
       base.transform.b,
       base.transform.c,
       base.transform.d,
       base.transform.tx,
-      -base.transform.ty,
+      base.transform.ty,
     )
   }
 

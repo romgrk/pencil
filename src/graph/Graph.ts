@@ -1,6 +1,6 @@
 import { Matrix } from '2d-geometry'
 import { Dataset } from './Dataset'
-import { Layer } from './Layer'
+import { Container } from './Container'
 import { Pencil } from './Pencil'
 import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
 
@@ -32,8 +32,8 @@ export class Graph {
   height: number
   transform: Matrix
 
-  root: Layer
-  layersByName: Record<string, Layer>
+  root: Container
+  layersByName: Record<string, Container>
 
   mixins: Mixin[]
 
@@ -55,7 +55,7 @@ export class Graph {
 
     this.transform = TRANSFORM_PIXEL_RATIO
 
-    this.root = new Layer()
+    this.root = new Container()
     this.layersByName = {
       root: this.root
     }
@@ -68,7 +68,7 @@ export class Graph {
   }
 
   render() {
-    this.pencil.clear()
+    this.pencil.setup()
     this.root.render(this)
   }
 }

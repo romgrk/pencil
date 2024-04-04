@@ -15,12 +15,17 @@ export function traverseWithTransform(root: Base, fn: (element: Base, transform:
       element.transform === Matrix.IDENTITY ?
         currentTransform :
         currentTransform.multiply(element.transform)
+
     transforms.push(currentTransform)
+
     fn(element, currentTransform)
+
     for (let i = 0; i < element.children.length; i++) {
       _recurse(element.children[i], fn)
     }
+
     transforms.pop()
+
     currentTransform = transforms[transforms.length - 1]
   }
 

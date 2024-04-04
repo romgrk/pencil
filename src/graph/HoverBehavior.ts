@@ -23,10 +23,7 @@ export class HoverBehavior {
   }
 
   onPointerMove = (event: PointerEvent) => {
-    const position = new Point(
-      event.offsetX,
-      this.graph.height - event.offsetY,
-    )
+    const position = new Point(event.offsetX, event.offsetY)
     this.options.onPointerMove?.(position, event)
   }
 }

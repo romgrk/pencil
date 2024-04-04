@@ -1,5 +1,7 @@
-import { LinearChart } from './graph/react'
+import { GraphContainer } from './graph/react'
+import { LinearChart } from './graph/LinearChart'
 import { Dataset } from './graph/Dataset'
+import { CustomGraph } from './CustomGraph'
 import data from './grid-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
@@ -33,7 +35,14 @@ const dataset = new Dataset(
 function App() {
   return (
     <div className='App'>
-      <LinearChart
+      <GraphContainer
+        type={LinearChart}
+        width={800}
+        height={500}
+        dataset={dataset}
+      />
+      <GraphContainer
+        type={CustomGraph}
         width={800}
         height={500}
         dataset={dataset}
