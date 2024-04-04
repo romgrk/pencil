@@ -35,12 +35,14 @@ const dataset = new Dataset(
 function App() {
   return (
     <div className='App'>
-      <GraphContainer
-        type={LinearChart}
-        width={800}
-        height={500}
-        dataset={dataset}
-      />
+      {
+        <GraphContainer
+          type={LinearChart}
+          width={800}
+          height={500}
+          dataset={dataset}
+        />
+      }
       <GraphContainer
         type={CustomGraph}
         width={800}
