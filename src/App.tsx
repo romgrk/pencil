@@ -1,5 +1,5 @@
 import { GraphContainer } from './graph/react'
-import { LinearChart } from './graph/LinearChart'
+import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
 import { CustomGraph } from './CustomGraph'
 import data from './grid-downloads.json'
@@ -22,7 +22,7 @@ const weeks = byWeek.reduce((result, xs) => {
   return result
 }, [])
 
-const partial = weeks.slice(120, 160)
+const partial = weeks.slice(120, 125)
 const dataset = new Dataset(
   partial,
   {
@@ -43,12 +43,14 @@ function App() {
           dataset={dataset}
         />
       }
-      <GraphContainer
-        type={CustomGraph}
-        width={800}
-        height={500}
-        dataset={dataset}
-      />
+      {
+        // <GraphContainer
+        //   type={CustomGraph}
+        //   width={800}
+        //   height={500}
+        //   dataset={dataset}
+        // />
+      }
     </div>
   )
 }

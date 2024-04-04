@@ -1,4 +1,4 @@
-import { Circle, Bezier, Path, Segment, point } from '2d-geometry'
+import { Circle, Bezier, Path, Segment, Matrix, point, ShapeTag } from '2d-geometry'
 import { Graph } from './graph/Graph'
 import { Container } from './graph/Container'
 import { Node } from './graph/Node'
@@ -13,9 +13,9 @@ export class CustomGraph extends Graph {
   constructor(domNode: any, options: any) {
     super(domNode, options)
 
-    this.root.add(new Container([
-      new elements.Grid()
-    ]))
+    this.root.add(new Container([new elements.Grid()]))
+    const content = new Container([], Matrix.IDENTITY.translate(100, 100))
+    this.root.add(content)
 
     const cursor = new Container([
       new Node(new Circle(0, 0, 8), Style.from({ strokeStyle: '#e45050' }))
@@ -26,17 +26,19 @@ export class CustomGraph extends Graph {
       const circle = new Container([
         new Node(new Circle(0, 0, 10), style)
       ])
+      circle.addTag('circle')
       circle.x = 200
       circle.y = 200
-      this.root.add(circle)
+      content.add(circle)
     }
     {
       const circle = new Container([
         new Node(new Circle(0, 0, 10), style)
       ])
+      circle.addTag('circle')
       circle.x = 200
       circle.y = 300
-      this.root.add(circle)
+      content.add(circle)
     }
     {
       const style = Style.from({ lineWidth: 3, strokeStyle: '#566eff' })
@@ -71,7 +73,7 @@ export class CustomGraph extends Graph {
       ])
       container.x = 200
       container.y = 400
-      this.root.add(container)
+      content.add(container)
 
       animate({ from: 0, to: 1, duration: 2000 }, (f) => {
         const partial = path.slice(0, path.length * f)
@@ -85,16 +87,18 @@ export class CustomGraph extends Graph {
         cursor.x = position.x
         cursor.y = position.y
 
-        traverseWithTransform(this.root, (element, _transform) => {
-          if (element instanceof Node) {
-            // const currentPosition = position.transform(transform.invert())
-            //
-            // if (element.shape.contains(currentPosition)) {
-            //   animate({ from: circle.scale, to: 2 }, (scale) => {
-            //     circle.scale = scale
-            //     this.render()
-            //   })
-            // }
+        traverseWithTransform(this.root, (element, transform) => {
+          if (element instanceof Node && element.shape.tag === ShapeTag.Circle && element.parent!.tags?.has('circle')) {
+            const currentPosition = position.transform(transform.invert())
+
+            if (element.shape.contains(currentPosition)) {
+              const circle = element.parent!
+              console.log(circle)
+              animate({ from: circle.scale, to: 2 }, (scale) => {
+                circle.scale = scale
+                this.render()
+              })
+            }
           }
         })
 

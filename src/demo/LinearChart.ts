@@ -1,22 +1,22 @@
 import { Bezier, Box, Path, Matrix, Point, Segment, Circle, lerp } from '2d-geometry'
-import { Node, Text } from './Node'
-import { Base } from './Base'
-import { Dataset } from './Dataset'
-import { Container } from './Container'
-import { Style } from './Style'
-import { TextStyle } from './TextStyle'
-import { DragBehavior } from './DragBehavior'
-import { ScrollBehavior } from './ScrollBehavior'
-import { HoverBehavior } from './HoverBehavior'
-import { linearScale, LinearScale } from './linearScale'
-import { animate, Easing } from './animate'
-import { traverseWithTransform } from './traverse'
-import { positionInObject } from './position'
-import * as Interval from './interval'
-import { PIXEL_RATIO } from './constants'
-import * as elements from './elements'
-import * as chart from './Graph'
-import { Graph } from './Graph'
+import { Node, Text } from '../graph/Node'
+import { Base } from '../graph/Base'
+import { Dataset } from '../graph/Dataset'
+import { Container } from '../graph/Container'
+import { Style } from '../graph/Style'
+import { TextStyle } from '../graph/TextStyle'
+import { DragBehavior } from '../graph/DragBehavior'
+import { ScrollBehavior } from '../graph/ScrollBehavior'
+import { HoverBehavior } from '../graph/HoverBehavior'
+import { linearScale, LinearScale } from '../graph/linearScale'
+import { animate, Easing } from '../graph/animate'
+import { traverseWithTransform } from '../graph/traverse'
+import { positionInObject } from '../graph/position'
+import * as Interval from '../graph/interval'
+import { PIXEL_RATIO } from '../graph/constants'
+import * as elements from '../graph/elements'
+import * as chart from '../graph/Graph'
+import { Graph } from '../graph/Graph'
 
 export type Options = chart.Options
 
@@ -336,20 +336,15 @@ export class LinearChart extends chart.Graph {
       )
     )
     .then(() =>
-      animate({ from: 0, to: 3, duration: 250, easing: Easing.LINEAR }, (r) => {
-        this.populateDataset(r, 0)
-        this.render()
-      })
-    )
-    .then(() =>
-      animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR }, (f) => {
-        this.populateDataset(3, f)
+      animate({ from: 0, to: 1, duration: 250, easing: Easing.LINEAR }, (f) => {
+        this.populateDataset(1 + 2 * f, 0)
         this.render()
       })
     )
     .then(() =>
       animate({ from: 0, to: 1, duration: 500, easing: Easing.LINEAR }, (f) => {
         pathAreaNode.alpha = f
+        this.populateDataset(3, f)
         this.render()
       })
     )
