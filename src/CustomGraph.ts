@@ -1,11 +1,9 @@
-import { Circle, Bezier, Path, Segment, Matrix, point, ShapeTag } from '2d-geometry'
+import { Circle, Bezier, Point, Path, Segment, Matrix, point, ShapeTag } from '2d-geometry'
 import { Graph } from './graph/Graph'
 import { Container } from './graph/Container'
 import { Node } from './graph/Node'
 import { Style } from './graph/Style'
-import { HoverBehavior } from './graph/HoverBehavior'
-import { traverseWithTransform } from './graph/traverse'
-import { animate } from './graph/animate'
+import { animate, Animation } from './graph/animate'
 import * as elements from './graph/elements'
 
 
@@ -14,32 +12,80 @@ export class CustomGraph extends Graph {
     super(domNode, options)
 
     this.root.add(new Container([new elements.Grid()]))
-    const content = new Container([], Matrix.IDENTITY.translate(100, 100))
+    const content = new Container([], Matrix.IDENTITY)
     this.root.add(content)
 
     const cursor = new Container([
       new Node(new Circle(0, 0, 8), Style.from({ strokeStyle: '#e45050' }))
     ])
 
-    const style = Style.from({ fillStyle: '#566eff' })
+    const colors = [
+      '#568fff',
+      '#566eff',
+      '#5451e7',
+      '#7b51e7',
+      '#a251e7',
+      '#b551e7',
+    ]
     {
+      const animation = new Animation()
+      const style = Style.from({ fillStyle: '#566eff' })
       const circle = new Container([
         new Node(new Circle(0, 0, 10), style)
       ])
       circle.addTag('circle')
       circle.x = 200
       circle.y = 200
+      circle.on('pointerover', () => {
+        this.cursor = 'pointer'
+        animation.start({ from: circle.scale, to: 2 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerout', () => {
+        this.cursor = 'default'
+        animation.start({ from: circle.scale, to: 1 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
       content.add(circle)
     }
-    {
+
+    const addBall = (color: string, x: number, y: number) => {
+      const animation = new Animation()
+      const style = Style.from({ fillStyle: color })
       const circle = new Container([
         new Node(new Circle(0, 0, 10), style)
       ])
       circle.addTag('circle')
-      circle.x = 200
-      circle.y = 300
+      circle.x = x
+      circle.y = y
+      circle.on('pointerover', () => {
+        this.cursor = 'pointer'
+        animation.start({ from: circle.scale, to: 2 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerout', () => {
+        this.cursor = 'default'
+        animation.start({ from: circle.scale, to: 1 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
       content.add(circle)
     }
+
+    for (let i = 0; i < 27; i++) {
+      const x = Math.round(Math.random() * this.width)
+      const y = Math.round(Math.random() * this.height)
+      const color = colors[~~(Math.random() * colors.length)]
+      addBall(color, x, y)
+    }
+
     {
       const style = Style.from({ lineWidth: 3, strokeStyle: '#566eff' })
       const path = new Path([
@@ -81,31 +127,6 @@ export class CustomGraph extends Graph {
         this.render()
       })
     }
-
-    const hover = new HoverBehavior(this, {
-      onPointerMove: (position) => {
-        cursor.x = position.x
-        cursor.y = position.y
-
-        traverseWithTransform(this.root, (element, transform) => {
-          if (element instanceof Node && element.shape.tag === ShapeTag.Circle && element.parent!.tags?.has('circle')) {
-            const currentPosition = position.transform(transform.invert())
-
-            if (element.shape.contains(currentPosition)) {
-              const circle = element.parent!
-              console.log(circle)
-              animate({ from: circle.scale, to: 2 }, (scale) => {
-                circle.scale = scale
-                this.render()
-              })
-            }
-          }
-        })
-
-        this.render()
-      },
-    })
-    hover.enable()
 
     this.root.add(cursor)
 

@@ -1,4 +1,6 @@
 import { GraphContainer } from './graph/react'
+import { Debug } from './demo/Debug'
+import { Pencil } from './demo/Pencil'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
 import { CustomGraph } from './CustomGraph'
@@ -36,12 +38,12 @@ function App() {
   return (
     <div className='App'>
       {
-        <GraphContainer
-          type={LinearChart}
-          width={800}
-          height={500}
-          dataset={dataset}
-        />
+        // <GraphContainer
+        //   type={LinearChart}
+        //   width={800}
+        //   height={500}
+        //   dataset={dataset}
+        // />
       }
       {
         // <GraphContainer
@@ -50,6 +52,20 @@ function App() {
         //   height={500}
         //   dataset={dataset}
         // />
+      }
+      {
+        // <GraphContainer
+        //   type={Debug}
+        //   width={800}
+        //   height={500}
+        // />
+      }
+      {
+        <GraphContainer
+          type={Pencil}
+          width={700}
+          height={300}
+        />
       }
     </div>
   )

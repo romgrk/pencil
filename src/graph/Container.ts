@@ -1,37 +1,112 @@
-import { Matrix } from '2d-geometry'
+import { Point, Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
-import { Base } from './Base'
 import { traverse } from './traverse'
+import { EventName } from './EventManager'
 
-export class Container extends Base {
+export class Container {
+  graph: Graph | null
+  parent: Container | null
+  children: Container[]
+  tags: Set<string> | null // FIXME: integers?
+  listeners: Record<string, Set<Function>> | null
 
-  constructor(children: Base[] = [], transform?: Matrix, mask?: Base, alpha?: number) {
-    super()
+  visible: boolean
+  transform: Matrix
+  mask: Container | null
+  alpha: number
+
+  constructor(children: Container[] = [], transform?: Matrix, mask?: Container, alpha?: number) {
+    this.graph = null
+    this.parent = null
     this.children = children
+    this.tags = null
+    this.listeners = null
+
+    this.visible = true
+    this.transform = transform ?? Matrix.IDENTITY.clone()
+    this.mask = mask ?? null
+    this.alpha = NaN
+    this.alpha = alpha ?? 1
+
     for (let i = 0; i < children.length; i++) {
       children[i].parent = this
     }
-    this.transform = transform ?? Matrix.IDENTITY.clone()
-    this.mask = mask ?? null
-    this.alpha = alpha ?? 1
   }
 
-  add(node: Base) {
+  get x() { return this.transform.tx }
+  set x(n: number) { this.transform.tx = n }
+
+  get y() { return this.transform.ty }
+  set y(n: number) { this.transform.ty = n }
+
+  get scale() { return this.transform.a }
+  set scale(n: number) {
+    this.transform.a = n
+    this.transform.d = n
+  }
+
+  needsContext() {
+    return !this.transform.isIdentity() || this.alpha !== 1 || this.mask !== null
+  }
+
+  on(event: EventName, callback: Function) {
+    this.listeners ??= {}
+    this.listeners[event] ??= new Set()
+    this.listeners[event].add(callback)
+    this.graph?.eventManager.on(event, this)
+  }
+
+  off(event: EventName, callback: Function) {
+    const listeners = this.listeners?.[event]
+    if (listeners) {
+      listeners.delete(callback)
+      this.graph?.eventManager.off(event, this)
+    }
+  }
+
+  add(node: Container) {
     node.parent = this
     this.children.push(node)
+    this.graph?.attach(node)
   }
 
-  remove(node: Base) {
+  remove(node: Container) {
     if (node.parent === this) {
-      this.children = this.children.filter(c => c !== node)
+      const index = this.children.findIndex(c => c !== node)
+      if (index !== -1) {
+        this.children.splice(index, 1)
+        this.graph?.detach(node)
+      }
+      node.parent = null
     }
   }
 
   clear() {
-    this.children = []
+    this.children.forEach(node => {
+      node.parent = null
+      this.graph?.detach(node)
+    })
+    this.children.length = 0
   }
 
-  query(tag: string): Base | null {
+  contains(point: Point) {
+    const currentPoint =
+      this.transform.isIdentity() ? point : point.transform(this.transform.invert())
+
+    for (let i = 0; i < this.children.length; i++) {
+      if (this.children[i].contains(currentPoint)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  addTag(tag: string) {
+    this.tags ??= new Set()
+    this.tags.add(tag)
+  }
+
+  query(tag: string): Container | null {
     try {
       traverse(this, child => {
         if (child.tags && child.tags.has(tag)) {
@@ -45,7 +120,7 @@ export class Container extends Base {
   }
 
   queryAll(tag: string) {
-    const result = [] as Base[]
+    const result = [] as Container[]
     traverse(this, child => {
       if (child.tags && child.tags.has(tag)) {
         result.push(child)
@@ -55,60 +130,35 @@ export class Container extends Base {
   }
 
   render(graph: Graph) {
-    const needsContext = getNeedsContext(this)
+    const { pencil } = graph
+
+    const needsContext = this.needsContext()
 
     if (needsContext) {
-      prepareRender(graph, this)
+      pencil.prepare(this)
     }
 
     for (let j = 0; j < this.children.length; j++) {
       const child = this.children[j]
-      if (child instanceof Container) {
+      if (child.constructor === Container) {
         child.render(graph)
       } else {
-        const needsContext = getNeedsContext(child)
+        const needsContext = child.needsContext()
 
         if (needsContext) {
-          prepareRender(graph, child)
+          pencil.prepare(child)
         }
 
         child.render(graph)
 
         if (needsContext) {
-          graph.pencil.restore()
+          pencil.restore()
         }
       }
     }
 
     if (needsContext) {
-      graph.pencil.restore()
+      pencil.restore()
     }
-  }
-}
-
-function getNeedsContext(base: Base) {
-  return !base.transform.isIdentity() || base.alpha !== 1 || base.mask !== null
-}
-
-function prepareRender(graph: Graph, base: Base) {
-  graph.pencil.save()
-
-  if (!base.transform.isIdentity()) {
-    graph.ctx.transform(
-      base.transform.a,
-      base.transform.b,
-      base.transform.c,
-      base.transform.d,
-      base.transform.tx,
-      base.transform.ty,
-    )
-  }
-
-  if (base.mask) {
-    graph.pencil.mask(base.mask)
-  }
-
-  if (base.alpha !== 1) {
-    graph.ctx.globalAlpha = graph.ctx.globalAlpha * base.alpha
   }
 }

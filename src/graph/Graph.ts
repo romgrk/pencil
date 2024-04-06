@@ -1,12 +1,10 @@
-import { Matrix } from '2d-geometry'
-import { Dataset } from './Dataset'
+import { Box } from '2d-geometry'
+import { EventManager } from './EventManager'
 import { Container } from './Container'
+import { Node } from './Node'
 import { Pencil } from './Pencil'
-import { PIXEL_RATIO, TRANSFORM_PIXEL_RATIO } from './constants'
-
-// <div class='PencilGraph'>
-//   <canvas />
-// </div>
+import { PIXEL_RATIO } from './constants'
+import { traverse } from'./traverse'
 
 const CONTENT = `
   <canvas />
@@ -15,11 +13,11 @@ const CONTENT = `
 export type Options = {
   width?: number,
   height?: number,
-  dataset: Dataset<any>,
 }
 
 export type Mixin = {
-  disable?(): void
+  enable(): void
+  disable(): void
 }
 
 export class Graph {
@@ -30,12 +28,12 @@ export class Graph {
 
   width: number
   height: number
-  transform: Matrix
 
   root: Container
   layersByName: Record<string, Container>
 
-  mixins: Mixin[]
+  mixins: Record<string, Mixin>
+  _eventManager: EventManager | null
 
   constructor(root: HTMLElement, options?: Options) {
     this.domNode = root
@@ -53,18 +51,44 @@ export class Graph {
     this.canvas.style.width = `${this.width}px`
     this.canvas.style.height = `${this.height}px`
 
-    this.transform = TRANSFORM_PIXEL_RATIO
-
     this.root = new Container()
-    this.layersByName = {
-      root: this.root
-    }
+    this.root.graph = this
+    this.root.add(new Node(new Box(0, 0, this.width, this.height)))
+    this.layersByName = {}
 
-    this.mixins = []
+    this.mixins = {}
+    this._eventManager = null
+  }
+
+  set cursor(value: string) {
+    this.canvas.style.cursor = value
+  }
+
+  get eventManager() {
+    return this._eventManager ??= new EventManager(this)
+  }
+
+  attach(node: Container) {
+    traverse(node, node => {
+      node.graph = this
+      if (node.listeners) {
+        this.eventManager.attach(node)
+      }
+    })
+  }
+
+  detach(node: Container) {
+    traverse(node, node => {
+      node.graph = null
+      if (node.listeners) {
+        this.eventManager.detach(node)
+      }
+    })
   }
 
   destroy() {
-    this.mixins.forEach(m => m.disable?.())
+    Object.values(this.mixins).forEach(m => m.disable())
+    this._eventManager?.destroy()
   }
 
   render() {

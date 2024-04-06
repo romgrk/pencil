@@ -1,5 +1,5 @@
-import { Circle, Bezier, Box, Path, Point, Segment, Shape, ShapeTag } from '2d-geometry'
-import type { Base } from './Base'
+import { Arc, Circle, Bezier, Quadratic, Box, Path, Point, Segment, Shape, ShapeTag } from '2d-geometry'
+import type { Container } from './Container'
 import type { Graph } from './Graph'
 import { PIXEL_RATIO } from './constants'
 import { Style } from './Style'
@@ -24,6 +24,11 @@ export class Pencil {
     this.isMasking = false
   }
 
+  setup() {
+    this.ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0)
+    this.ctx.clearRect(0, 0, this.graph.width, this.graph.height)
+  }
+
   save() {
     this.ctx.save()
   }
@@ -33,7 +38,6 @@ export class Pencil {
     this.lastStyleId = -1
     this.lastTextStyleId = -1
   }
-
 
   style(s: Style) {
     if (this.lastStyleId === s.id) {
@@ -58,20 +62,30 @@ export class Pencil {
     this.ctx.textBaseline = s.options.textBaseline
   }
 
-  setup() {
-    this.ctx.resetTransform()
-    this.ctx.clearRect(0, 0, this.graph.width * PIXEL_RATIO, this.graph.height * PIXEL_RATIO)
-    this.ctx.setTransform(
-      this.graph.transform.a,
-      this.graph.transform.b,
-      this.graph.transform.c,
-      this.graph.transform.d,
-      this.graph.transform.tx,
-      -this.graph.transform.ty,
-    )
+  prepare(container: Container) {
+    this.save()
+
+    if (!container.transform.isIdentity()) {
+      this.ctx.transform(
+        container.transform.a,
+        container.transform.b,
+        container.transform.c,
+        container.transform.d,
+        container.transform.tx,
+        container.transform.ty,
+      )
+    }
+
+    if (container.mask) {
+      this.mask(container.mask)
+    }
+
+    if (container.alpha !== 1) {
+      this.ctx.globalAlpha = this.ctx.globalAlpha * container.alpha
+    }
   }
 
-  mask(mask: Base) {
+  mask(mask: Container) {
     this.isMasking = true
     mask.render(this.graph)
     this.isMasking = false
@@ -116,15 +130,23 @@ export class Pencil {
         this.ctx.ellipse(s.center.x, s.center.y, s.r, s.r, 0, 0, Math.PI * 2)
         break
       }
+      case ShapeTag.Arc: {
+        const s = shape as Arc
+        this.ctx.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        break
+      }
+      case ShapeTag.Quadratic: {
+        const s = shape as Quadratic
+        if (move)
+          this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
+        break
+      }
       case ShapeTag.Bezier: {
         const s = shape as Bezier
         if (move)
           this.ctx.moveTo(s.start.x, s.start.y)
-        this.ctx.bezierCurveTo(
-          s.control1.x, s.control1.y,
-          s.control2.x, s.control2.y,
-          s.end.x, s.end.y,
-        )
+        this.ctx.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
         break
       }
       case ShapeTag.Path: {
@@ -168,4 +190,8 @@ export class Pencil {
       this.ctx.strokeText(value, position.x, position.y)
     }
   }
+}
+
+export function getNeedsContext(container: Container) {
+  return !container.transform.isIdentity() || container.alpha !== 1 || container.mask !== null
 }

@@ -1,12 +1,12 @@
 import { Point } from '2d-geometry'
 import type { Shape } from '2d-geometry'
 import type { Graph } from './Graph'
-import { Base } from './Base'
+import { Container } from './Container'
 import { Style } from './Style'
 import { TextStyle } from './TextStyle'
 import { measureText } from './measureText'
 
-export class Node extends Base {
+export class Node extends Container {
   shape: Shape
   style: Style
 
@@ -17,7 +17,10 @@ export class Node extends Base {
   }
 
   contains(p: Point) {
-    return this.shape.contains(p)
+    if (this.shape.contains(p)) {
+      return true
+    }
+    return super.contains(p)
   }
 
   render(graph: Graph) {

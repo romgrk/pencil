@@ -54,6 +54,20 @@ export function animate(options: Options, onChange: AnimateCallback) {
   return promise
 }
 
+export class Animation {
+  current: AnimatePromise | null = null
+
+  start(options: Options, onChange: AnimateCallback) {
+    this.current?.cancel()
+    this.current = animate(options, onChange)
+    return this.current
+  }
+
+  cancel() {
+    this.current?.cancel()
+  }
+}
+
 function lerp(factor: number, a: number, b: number) {
   return a * (1 - factor) + b * factor
 }

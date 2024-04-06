@@ -1,24 +1,25 @@
 import { Bezier, Box, Path, Matrix, Point, Segment, Circle, lerp } from '2d-geometry'
 import { Node, Text } from '../graph/Node'
-import { Base } from '../graph/Base'
 import { Dataset } from '../graph/Dataset'
 import { Container } from '../graph/Container'
 import { Style } from '../graph/Style'
 import { TextStyle } from '../graph/TextStyle'
 import { DragBehavior } from '../graph/DragBehavior'
 import { ScrollBehavior } from '../graph/ScrollBehavior'
-import { HoverBehavior } from '../graph/HoverBehavior'
+import { MoveBehavior } from '../graph/MoveBehavior'
 import { linearScale, LinearScale } from '../graph/linearScale'
 import { animate, Easing } from '../graph/animate'
 import { traverseWithTransform } from '../graph/traverse'
-import { positionInObject } from '../graph/position'
+import { positionAtObject } from '../graph/position'
 import * as Interval from '../graph/interval'
 import { PIXEL_RATIO } from '../graph/constants'
 import * as elements from '../graph/elements'
 import * as chart from '../graph/Graph'
 import { Graph } from '../graph/Graph'
 
-export type Options = chart.Options
+export type Options = chart.Options & {
+  dataset: Dataset<any>,
+}
 
 const colors = {
   debug: '#ff0000dd',
@@ -203,7 +204,7 @@ export class LinearChart extends chart.Graph {
 
     const drag = new DragBehavior(this, {
       onStart: () => {
-        this.root.queryAll('path').forEach((p: Base) => {
+        this.root.queryAll('path').forEach((p: Container) => {
           p.alpha = 0.7
         })
         this.render()
@@ -214,14 +215,14 @@ export class LinearChart extends chart.Graph {
         this.render()
       },
       onEnd: () => {
-        this.root.queryAll('path').forEach((p: Base) => {
+        this.root.queryAll('path').forEach((p: Container) => {
           p.alpha = 1
         })
         this.render()
       },
     })
     drag.enable()
-    this.mixins.push(drag)
+    this.mixins.drag = drag
 
     let scrollAnimation: Promise<void> | undefined
     const scroll = new ScrollBehavior(this, {
@@ -244,7 +245,7 @@ export class LinearChart extends chart.Graph {
           return
         }
 
-        const position = positionInObject(this.layersByName.content, event)
+        const position = positionAtObject(this.layersByName.content, event)
 
         const currentWidth = this.scale.x.domain[1] - this.scale.x.domain[0]
         const nextWidth = currentWidth * (event.deltaY < 0 ? 0.5 : 2)
@@ -284,19 +285,21 @@ export class LinearChart extends chart.Graph {
       },
     })
     scroll.enable()
-    this.mixins.push(scroll)
+    this.mixins.scroll = scroll
 
-    const hover = new HoverBehavior(this, {
-      onPointerMove: (position) => {
+    const hover = new MoveBehavior(this, {
+      onPointerMove: (event) => {
+        const position = new Point(event.offsetX, event.offsetY)
 
         cursorShape.pc.x = position.x
         cursorShape.pc.y = position.y
 
-        traverseWithTransform(this.layersByName.content, (element, transform) => {
+        traverseWithTransform(this.layersByName.content, (element, _transform) => {
           if (element.tags?.has('point')) {
-            const currentPosition = position.transform(transform.invert())
+            const circle = (element.children[0] as Node)
+            const currentPosition = positionAtObject(circle, event)
 
-            if ((element.children[0] as Node).shape.contains(currentPosition)) {
+            if (circle.shape.contains(currentPosition)) {
               animate({ from: element.scale, to: 2 }, (scale) => {
                 element.scale = scale
                 this.render()
@@ -309,7 +312,7 @@ export class LinearChart extends chart.Graph {
       },
     })
     hover.enable()
-    this.mixins.push(hover)
+    this.mixins.hover = hover
 
 
     // Setup
