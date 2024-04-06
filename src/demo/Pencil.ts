@@ -46,8 +46,20 @@ export class Pencil extends Graph {
     }
 
     Promise.all(animations).then(() =>
-      animate({ duration: 250 }, f => {
-        content.alpha = 1 - f
+      animate({ duration: 500 }, f => {
+        content.clear()
+
+        for (let i = 0; i < paths.length; i++) {
+          const path = paths[i]
+          const node = new Node(
+            path,
+            Style.from({ lineWidth: 1 + 2 * f, strokeStyle: colors[i % colors.length] })
+          )
+          node.x = -boundingBox.center.x
+          node.y = -boundingBox.center.y
+          content.add(node)
+        }
+
         this.render()
       })
     )
