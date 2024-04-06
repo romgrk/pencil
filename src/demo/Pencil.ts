@@ -1,61 +1,58 @@
-import { svg, Matrix } from '2d-geometry'
+import { SVG, Matrix, Path } from '2d-geometry'
 import { Graph } from '../graph/Graph'
 import { Container } from '../graph/Container'
 import { Node } from '../graph/Node'
 import { Style } from '../graph/Style'
 import { animate } from '../graph/animate'
 import * as elements from '../graph/elements'
-import pencilPath from './pencil.path'
+import * as PENCIL from './pencil.path'
 
 const colors = [
-  '#568fff',
-  '#566eff',
+  '#5e75ff',
   '#5451e7',
+  '#6051E7',
   '#7b51e7',
   '#a251e7',
   '#b551e7',
 ]
 
-const paths = svg.parsePath(pencilPath)
+const paths = PENCIL.LETTERS.map(letter => SVG.parsePath(letter, { split: false })[0])
 
 export class Pencil extends Graph {
   constructor(domNode: any, options: any) {
     super(domNode, options)
 
-    this.root.add(new Container([new elements.Grid()]))
-    const content = new Container([], Matrix.IDENTITY.translate(100, 89))
-    this.root.add(content)
+    const strokes = new Container([], Matrix.IDENTITY.translate(100, 89))
+    const filling = new Container([], Matrix.IDENTITY.translate(100, 89))
+    filling.alpha = 0
 
+    this.root.add(new Container([new elements.Grid()]))
+    this.root.add(filling)
+    this.root.add(strokes)
 
     let animations = []
     for (let i = 0; i < paths.length; i++) {
       const path = paths[i]
       const node = new Node(path.slice(0, path.length * 0), Style.from({ lineWidth: 1, strokeStyle: colors[i % colors.length] }))
-      content.add(node)
+      strokes.add(node)
 
-      const a = animate({ delay: i * 400, duration: 2000 }, f => {
+      const n = 200
+      animations.push(animate({ delay: i * n, duration: n * 18 }, f => {
         node.shape = path.slice(0, path.length * f)
         this.render()
-      })
-      animations.push(a)
+      }))
     }
 
-    Promise.all(animations).then(() =>
-      animate({ duration: 500 }, f => {
-        content.clear()
+    Promise.all(animations).then(() => {
+      for (let i = 0; i < paths.length; i++) {
+        filling.add(new Node(paths[i], Style.from({ fillStyle: colors[i % colors.length] })))
+      }
 
-        for (let i = 0; i < paths.length; i++) {
-          const path = paths[i]
-          const node = new Node(
-            path,
-            Style.from({ lineWidth: 1 + 2 * f, strokeStyle: colors[i % colors.length] })
-          )
-          content.add(node)
-        }
-
+      return animate({ duration: 1000 }, f => {
+        filling.alpha = 0.2 * f
         this.render()
       })
-    )
+    })
 
     this.render()
   }

@@ -95,39 +95,39 @@ export class Pencil {
   draw(s: Shape) {
     if (this.isMasking) {
       this.ctx.beginPath()
-      this.drawPath(s)
+      this.trace(s)
       this.ctx.closePath()
       return
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
-      this.drawPath(s)
-      this.ctx.fill()
+      this.trace(s)
+      this.ctx.fill('evenodd')
     }
     if (this.lastStyle.options.strokeStyle) {
       this.ctx.beginPath()
-      this.drawPath(s)
+      this.trace(s)
       this.ctx.stroke()
     }
   }
 
-  drawPath(shape: Shape, move: boolean = true) {
+  trace(shape: Shape) {
     switch (shape.tag) {
       case ShapeTag.Box: {
         const s = shape as Box
         this.ctx.rect(s.xmin, s.ymin - s.height, s.width, s.height)
         break
       }
-      case ShapeTag.Segment: {
-        const s = shape as Segment
-        if (move)
-          this.ctx.moveTo(s.start.x, s.start.y)
-        this.ctx.lineTo(s.end.x,   s.end.y)
-        break
-      }
       case ShapeTag.Circle: {
         const s = shape as Circle
         this.ctx.ellipse(s.center.x, s.center.y, s.r, s.r, 0, 0, Math.PI * 2)
+        break
+      }
+
+      case ShapeTag.Segment: {
+        const s = shape as Segment
+        this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.lineTo(s.end.x,   s.end.y)
         break
       }
       case ShapeTag.Arc: {
@@ -137,28 +137,23 @@ export class Pencil {
       }
       case ShapeTag.Quadratic: {
         const s = shape as Quadratic
-        if (move)
-          this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.moveTo(s.start.x, s.start.y)
         this.ctx.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
         break
       }
       case ShapeTag.Bezier: {
         const s = shape as Bezier
-        if (move)
-          this.ctx.moveTo(s.start.x, s.start.y)
+        this.ctx.moveTo(s.start.x, s.start.y)
         this.ctx.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
         break
       }
+
       case ShapeTag.Path: {
         const s = shape as Path
-        const start = s.pointAtLength(0)
-        this.ctx.moveTo(start.x, start.y)
-
-        for (let i = 0; i < s.parts.length; i++) {
-          this.drawPath(s.parts[i], false)
-        }
+        drawPath(this.ctx, s)
         break
       }
+
       default: {
         throw new Error('unimplemented')
       }
@@ -168,7 +163,7 @@ export class Pencil {
   drawPoint(s: Point, r: number = 3) {
     if (this.isMasking) {
       this.ctx.beginPath()
-      return this.drawPath(s)
+      return this.trace(s)
     }
     if (this.lastStyle.options.fillStyle) {
       this.ctx.beginPath()
@@ -194,4 +189,48 @@ export class Pencil {
 
 export function getNeedsContext(container: Container) {
   return !container.transform.isIdentity() || container.alpha !== 1 || container.mask !== null
+}
+
+function drawPath(ctx: CanvasRenderingContext2D, path: Path) {
+  const start = path.pointAtLength(0)
+  ctx.moveTo(start.x, start.y)
+
+  let lastPoint = null
+  for (let i = 0; i < path.parts.length; i++) {
+    const shape = path.parts[i]
+    const start = shape.start
+
+    if (start !== lastPoint) {
+      ctx.closePath()
+      ctx.moveTo(start.x, start.y)
+    }
+
+    lastPoint = shape.end
+
+    switch (shape.tag) {
+      case ShapeTag.Segment: {
+        const s = shape as Segment
+        ctx.lineTo(s.end.x,   s.end.y)
+        break
+      }
+      case ShapeTag.Arc: {
+        const s = shape as Arc
+        ctx.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        break
+      }
+      case ShapeTag.Quadratic: {
+        const s = shape as Quadratic
+        ctx.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
+        break
+      }
+      case ShapeTag.Bezier: {
+        const s = shape as Bezier
+        ctx.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
+        break
+      }
+      default: {
+        throw new Error('unimplemented')
+      }
+    }
+  }
 }
