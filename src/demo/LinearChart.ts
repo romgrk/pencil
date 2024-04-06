@@ -287,32 +287,32 @@ export class LinearChart extends chart.Graph {
     scroll.enable()
     this.mixins.scroll = scroll
 
-    const hover = new MoveBehavior(this, {
-      onPointerMove: (event) => {
-        const position = new Point(event.offsetX, event.offsetY)
-
-        cursorShape.pc.x = position.x
-        cursorShape.pc.y = position.y
-
-        traverseWithTransform(this.layersByName.content, (element, _transform) => {
-          if (element.tags?.has('point')) {
-            const circle = (element.children[0] as Node)
-            const currentPosition = positionAtObject(circle, event)
-
-            if (circle.shape.contains(currentPosition)) {
-              animate({ from: element.scale, to: 2 }, (scale) => {
-                element.scale = scale
-                this.render()
-              })
-            }
-          }
-        })
-
-        this.render()
-      },
-    })
-    hover.enable()
-    this.mixins.hover = hover
+    // const hover = new MoveBehavior(this, {
+    //   onPointerMove: (event) => {
+    //     const position = new Point(event.offsetX, event.offsetY)
+    //
+    //     cursorShape.pc.x = position.x
+    //     cursorShape.pc.y = position.y
+    //
+    //     traverseWithTransform(this.layersByName.content, (element, _transform) => {
+    //       if (element.tags?.has('point')) {
+    //         const circle = (element.children[0] as Node)
+    //         const currentPosition = positionAtObject(circle, event)
+    //
+    //         if (circle.shape.contains(currentPosition)) {
+    //           animate({ from: element.scale, to: 2 }, (scale) => {
+    //             element.scale = scale
+    //             this.render()
+    //           })
+    //         }
+    //       }
+    //     })
+    //
+    //     this.render()
+    //   },
+    // })
+    // hover.enable()
+    // this.mixins.hover = hover
 
 
     // Setup

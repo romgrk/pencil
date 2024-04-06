@@ -200,7 +200,7 @@ function drawPath(ctx: CanvasRenderingContext2D, path: Path) {
     const shape = path.parts[i]
     const start = shape.start
 
-    if (start !== lastPoint) {
+    if (start !== lastPoint && lastPoint !== null && !start.equalTo(lastPoint)) {
       ctx.closePath()
       ctx.moveTo(start.x, start.y)
     }

@@ -31,7 +31,7 @@ This library is a thin visualization layer on top of [2d-geometry](https://githu
 
 Apologies for the low-quality GIF, but it can hopefully demonstrate how powerful the primitives are. This runs at 60fps with sharp rendering when not compressed through GIF.
 
-![demo](./assets/pencil-demo.gif)
+![demo](https://github.com/romgrk/pencil/assets/1423607/f07fb1d6-afb5-4036-9518-584a95dcbd2f)
 
 ```typescript
 import { svg, Matrix } from '2d-geometry'
