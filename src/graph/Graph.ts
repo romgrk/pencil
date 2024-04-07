@@ -71,7 +71,7 @@ export class Graph {
   attach(node: Container) {
     traverse(node, node => {
       node.graph = this
-      if (node.listeners) {
+      if (node._events) {
         this.eventManager.attach(node)
       }
     })
@@ -80,7 +80,7 @@ export class Graph {
   detach(node: Container) {
     traverse(node, node => {
       node.graph = null
-      if (node.listeners) {
+      if (node._events) {
         this.eventManager.detach(node)
       }
     })
@@ -94,6 +94,7 @@ export class Graph {
   render() {
     this.pencil.setup()
     this.root.render(this)
+    this._eventManager?.render()
   }
 }
 

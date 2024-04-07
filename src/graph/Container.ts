@@ -1,26 +1,33 @@
 import { Point, Matrix } from '2d-geometry'
 import type { Graph } from './Graph'
 import { traverse } from './traverse'
-import { EventName } from './EventManager'
+import type { EventName, Events, EventListeners } from './EventManager'
+
+export type EventMeta = {
+  moveFlag: number
+  cursor: HTMLElement['style']['cursor']
+  listeners: EventListeners
+}
+const createEvents = () => ({ moveFlag: 0, cursor: 'auto', listeners: {} }) as EventMeta
 
 export class Container {
   graph: Graph | null
   parent: Container | null
   children: Container[]
   tags: Set<string> | null // FIXME: integers?
-  listeners: Record<string, Set<Function>> | null
 
   visible: boolean
   transform: Matrix
   mask: Container | null
   alpha: number
 
+  _events: EventMeta | null
+
   constructor(children: Container[] = [], transform?: Matrix, mask?: Container, alpha?: number) {
     this.graph = null
     this.parent = null
     this.children = children
     this.tags = null
-    this.listeners = null
 
     this.visible = true
     this.transform = transform ?? Matrix.IDENTITY.clone()
@@ -28,9 +35,12 @@ export class Container {
     this.alpha = NaN
     this.alpha = alpha ?? 1
 
+    this._events = null
+
     for (let i = 0; i < children.length; i++) {
       children[i].parent = this
     }
+
   }
 
   get x() { return this.transform.tx }
@@ -45,19 +55,21 @@ export class Container {
     this.transform.d = n
   }
 
+  get events() { return this._events ??= createEvents() }
+
   needsContext() {
     return !this.transform.isIdentity() || this.alpha !== 1 || this.mask !== null
   }
 
-  on(event: EventName, callback: Function) {
-    this.listeners ??= {}
-    this.listeners[event] ??= new Set()
-    this.listeners[event].add(callback)
+  on<T extends EventName>(event: T, callback: Events[T]) {
+    this._events ??= createEvents()
+    this._events.listeners[event] ??= new Set()
+    this._events.listeners[event]!.add(callback)
     this.graph?.eventManager.on(event, this)
   }
 
-  off(event: EventName, callback: Function) {
-    const listeners = this.listeners?.[event]
+  off<T extends EventName>(event: T, callback: Events[T]) {
+    const listeners = this._events?.listeners[event]
     if (listeners) {
       listeners.delete(callback)
       this.graph?.eventManager.off(event, this)

@@ -2,7 +2,7 @@ import { Point, Matrix } from '2d-geometry'
 import { Container } from './Container'
 
 export function positionAtObject(object: Container, event: WheelEvent | PointerEvent) {
-  let current = object as Container | null
+  let current = object.parent as Container | null
 
   let transforms = []
   while (current) {
@@ -10,7 +10,10 @@ export function positionAtObject(object: Container, event: WheelEvent | PointerE
     current = current.parent
   }
 
-  const t = transforms.reverse().reduce((acc, current) => acc.multiply(current), Matrix.IDENTITY)
+  const t = new Matrix()
+  for (let i = transforms.length - 1; i >= 0; i--) {
+    t.multiplyMut(transforms[i])
+  }
 
   return new Point(event.offsetX, event.offsetY).transform(t.invert())
 }
@@ -20,7 +23,7 @@ export function positionAtObjectCached(
   event: WheelEvent | PointerEvent,
   transformAtObject: Map<Container, Matrix>
 ) {
-  let current = object as Container | null
+  let current = object.parent as Container | null
 
   // [current, parent, ..., parent, root]
   let nodes = []

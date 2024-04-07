@@ -1,9 +1,11 @@
 import { memo, useEffect, useRef } from 'react'
 import * as graph from './Graph'
 
-type GraphType = typeof graph.Graph
+type Constructor = typeof graph.Graph
 
-function GraphContainerImpl<T extends GraphType>(props: { type: T } & ConstructorParameters<GraphType>[1]) {
+function GraphContainerImpl<T extends Constructor>(
+    props: { type: T } & ConstructorParameters<T>[1])
+{
   const domNode = useRef<HTMLDivElement>()
   const instance = useRef<graph.Graph>()
 
@@ -17,4 +19,4 @@ function GraphContainerImpl<T extends GraphType>(props: { type: T } & Constructo
   )
 }
 
-export const GraphContainer = memo(GraphContainerImpl)
+export const GraphContainer = memo(GraphContainerImpl) as typeof GraphContainerImpl

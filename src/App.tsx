@@ -39,7 +39,7 @@ function App() {
   return (
     <div className='App'>
       {
-        // <GraphContainer
+        // <GraphContainer<typeof LinearChart>
         //   type={LinearChart}
         //   width={800}
         //   height={500}
@@ -47,12 +47,11 @@ function App() {
         // />
       }
       {
-        // <GraphContainer
-        //   type={CustomGraph}
-        //   width={800}
-        //   height={500}
-        //   dataset={dataset}
-        // />
+        <GraphContainer
+          type={CustomGraph}
+          width={800}
+          height={500}
+        />
       }
       {
         // <GraphContainer
@@ -62,11 +61,11 @@ function App() {
         // />
       }
       {
-        <GraphContainer
-          type={PencilAnimation}
-          width={700}
-          height={300}
-        />
+        // <GraphContainer
+        //   type={PencilAnimation}
+        //   width={700}
+        //   height={300}
+        // />
       }
     </div>
   )

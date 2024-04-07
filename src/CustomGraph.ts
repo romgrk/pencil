@@ -27,31 +27,6 @@ export class CustomGraph extends Graph {
       '#a251e7',
       '#b551e7',
     ]
-    {
-      const animation = new Animation()
-      const style = Style.from({ fillStyle: '#566eff' })
-      const circle = new Container([
-        new Node(new Circle(0, 0, 10), style)
-      ])
-      circle.addTag('circle')
-      circle.x = 200
-      circle.y = 200
-      circle.on('pointerover', () => {
-        this.cursor = 'pointer'
-        animation.start({ from: circle.scale, to: 2 }, (scale) => {
-          circle.scale = scale
-          this.render()
-        })
-      })
-      circle.on('pointerout', () => {
-        this.cursor = 'default'
-        animation.start({ from: circle.scale, to: 1 }, (scale) => {
-          circle.scale = scale
-          this.render()
-        })
-      })
-      content.add(circle)
-    }
 
     const addBall = (color: string, x: number, y: number) => {
       const animation = new Animation()
@@ -62,15 +37,14 @@ export class CustomGraph extends Graph {
       circle.addTag('circle')
       circle.x = x
       circle.y = y
+      circle.events.cursor = 'pointer'
       circle.on('pointerover', () => {
-        this.cursor = 'pointer'
-        animation.start({ from: circle.scale, to: 2 }, (scale) => {
+        animation.start({ from: circle.scale, to: 1.5 }, (scale) => {
           circle.scale = scale
           this.render()
         })
       })
       circle.on('pointerout', () => {
-        this.cursor = 'default'
         animation.start({ from: circle.scale, to: 1 }, (scale) => {
           circle.scale = scale
           this.render()
@@ -79,7 +53,32 @@ export class CustomGraph extends Graph {
       content.add(circle)
     }
 
-    for (let i = 0; i < 27; i++) {
+    {
+      const animation = new Animation()
+      const style = Style.from({ fillStyle: colors[0] })
+      const circle = new Container([
+        new Node(new Circle(0, 0, 50), style)
+      ])
+      circle.addTag('circle')
+      circle.x = 300
+      circle.y = 300
+      circle.events.cursor = 'pointer'
+      circle.on('pointerenter', () => {
+        animation.start({from: circle.scale, to: 1.5}, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerleave', () => {
+        animation.start({from: circle.scale, to: 1}, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      content.add(circle)
+    }
+
+    for (let i = 0; i < 100; i++) {
       const x = Math.round(Math.random() * this.width)
       const y = Math.round(Math.random() * this.height)
       const color = colors[~~(Math.random() * colors.length)]
