@@ -1,4 +1,4 @@
-import { Circle, Bezier, Point, Path, Segment, Matrix, point, ShapeTag } from '2d-geometry'
+import { Circle, Bezier, Path, Segment, Matrix, point } from '2d-geometry'
 import { Graph } from './graph/Graph'
 import { Container } from './graph/Container'
 import { Node } from './graph/Node'
