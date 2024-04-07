@@ -31,24 +31,39 @@ export class CustomGraph extends Graph {
     const addBall = (color: string, x: number, y: number) => {
       const animation = new Animation()
       const style = Style.from({ fillStyle: color })
-      const circle = new Container([
-        new Node(new Circle(0, 0, 10), style)
-      ])
+      const node = new Node(new Circle(0, 0, 10), style)
+      const circle = new Container([node])
       circle.addTag('circle')
       circle.x = x
       circle.y = y
       circle.events.cursor = 'pointer'
-      circle.on('pointerover', () => {
+      circle.on('pointerenter', () => {
         animation.start({ from: circle.scale, to: 1.5 }, (scale) => {
           circle.scale = scale
           this.render()
         })
       })
-      circle.on('pointerout', () => {
+      circle.on('pointerleave', () => {
         animation.start({ from: circle.scale, to: 1 }, (scale) => {
           circle.scale = scale
           this.render()
         })
+      })
+      circle.on('pointerdown', () => {
+        animation.start({ from: circle.scale, to: 1.3, duration: 100 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerup', () => {
+        animation.start({ from: circle.scale, to: 1.5, duration: 100 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerclick', () => {
+        node.style = Style.from({ fillStyle: colors[~~(Math.random() * colors.length)] })
+        this.render()
       })
       content.add(circle)
     }
@@ -64,13 +79,25 @@ export class CustomGraph extends Graph {
       circle.y = 300
       circle.events.cursor = 'pointer'
       circle.on('pointerenter', () => {
-        animation.start({from: circle.scale, to: 1.5}, (scale) => {
+        animation.start({ from: circle.scale, to: 1.5 }, (scale) => {
           circle.scale = scale
           this.render()
         })
       })
       circle.on('pointerleave', () => {
-        animation.start({from: circle.scale, to: 1}, (scale) => {
+        animation.start({ from: circle.scale, to: 1 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerdown', () => {
+        animation.start({ from: circle.scale, to: 1.4 }, (scale) => {
+          circle.scale = scale
+          this.render()
+        })
+      })
+      circle.on('pointerup', () => {
+        animation.start({ from: circle.scale, to: 1.5 }, (scale) => {
           circle.scale = scale
           this.render()
         })

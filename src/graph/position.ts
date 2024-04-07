@@ -20,7 +20,7 @@ export function positionAtObject(object: Container, event: WheelEvent | PointerE
 
 export function positionAtObjectCached(
   object: Container,
-  event: WheelEvent | PointerEvent,
+  event: WheelEvent | PointerEvent | MouseEvent,
   transformAtObject: Map<Container, Matrix>
 ) {
   let current = object.parent as Container | null
@@ -41,14 +41,12 @@ export function positionAtObjectCached(
     current = current.parent
   }
 
-  let currentTransform = rootTransform
+  let t = rootTransform
   for (let i = nodes.length - 1; i >= 0; i--) {
     const node = nodes[i]
-    transformAtObject.set(node, currentTransform)
-    currentTransform = currentTransform.multiply(node.transform)
+    transformAtObject.set(node, t)
+    t = t.multiply(node.transform)
   }
-
-  const t = currentTransform
 
   return new Point(event.offsetX, event.offsetY).transform(t.invert())
 }
