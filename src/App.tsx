@@ -4,7 +4,7 @@ import { PencilAnimation } from './demo/PencilAnimation'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
 import { CustomGraph } from './CustomGraph'
-import data from './grid-downloads.json'
+import data from './node-gtk-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
   const chunkIndex = Math.floor(index / 7)
@@ -24,7 +24,8 @@ const weeks = byWeek.reduce((result, xs) => {
   return result
 }, [])
 
-const partial = weeks.slice(120, 125)
+const partial = weeks.slice()
+// const partial = weeks.slice(120, 125)
 const dataset = new Dataset(
   partial,
   {
