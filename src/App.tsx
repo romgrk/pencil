@@ -1,6 +1,6 @@
 import { GraphContainer } from './graph/react'
 import { Debug } from './demo/Debug'
-import { Pencil } from './demo/Pencil'
+import { PencilAnimation } from './demo/PencilAnimation'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
 import { CustomGraph } from './CustomGraph'
@@ -62,7 +62,7 @@ function App() {
       }
       {
         <GraphContainer
-          type={Pencil}
+          type={PencilAnimation}
           width={700}
           height={300}
         />

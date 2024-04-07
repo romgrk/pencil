@@ -19,7 +19,7 @@ const colors = [
 
 const paths = PENCIL.LETTERS.map(letter => parsePath(letter, { split: false })[0])
 
-export class Pencil extends Graph {
+export class PencilAnimation extends Graph {
   constructor(domNode: any, options: any) {
     super(domNode, options)
 
