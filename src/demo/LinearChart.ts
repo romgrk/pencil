@@ -27,7 +27,7 @@ const colors = {
 
 const PADDING = 50
 
-const AXIS_TICK_STYLE = Style.from({ lineWidth: 2, strokeStyle: colors.axisLine })
+const AXIS_TICK_STYLE = Style.from({ strokeStyle: colors.axisLine })
 const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
 const LABEL_TEXT_STYLE = TextStyle.from({
   font: '16px serif',
@@ -354,10 +354,8 @@ export class LinearChart extends chart.Graph {
         lastLabelX = x + textNode.dimensions.width + 40
         xLabels.add(new Container([
           new Node(new Segment(
-            x,
-            -3 + this.content.height,
-            x,
-            3 + this.content.height,
+            x, this.content.height,
+            x, this.content.height + 3,
           ), AXIS_TICK_STYLE),
           textNode,
         ]))
