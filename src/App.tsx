@@ -1,9 +1,6 @@
 import { GraphContainer } from './graph/react'
-import { Debug } from './demo/Debug'
-import { PencilAnimation } from './demo/PencilAnimation'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
-import { DemoEvents } from './demo/DemoEvents'
 import data from './node-gtk-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
@@ -24,8 +21,7 @@ const weeks = byWeek.reduce((result, xs) => {
   return result
 }, [])
 
-const partial = weeks.slice()
-// const partial = weeks.slice(120, 125)
+const partial = weeks.slice(10, 20)
 const dataset = new Dataset(
   partial,
   {
@@ -39,19 +35,19 @@ function App() {
   return (
     <div className='App'>
       {
-        // <GraphContainer<typeof LinearChart>
-        //   type={LinearChart}
-        //   width={800}
-        //   height={500}
-        //   dataset={dataset}
-        // />
-      }
-      {
-        <GraphContainer
-          type={DemoEvents}
+        <GraphContainer<typeof LinearChart>
+          type={LinearChart}
           width={800}
           height={500}
+          dataset={dataset}
         />
+      }
+      {
+        // <GraphContainer
+        //   type={DemoEvents}
+        //   width={800}
+        //   height={500}
+        // />
       }
       {
         // <GraphContainer

@@ -15,7 +15,8 @@ export type Events = {
   pointerup: (position: Point, event: PointerEvent) => void,
   pointerclick: (position: Point, event: MouseEvent) => void,
 
-  drag: (origin: Point, current: Point, offset: Vector) => void,
+  dragstart: (origin: Point) => void,
+  dragmove: (origin: Point, current: Point, offset: Vector) => void,
   dragend: (origin: Point, current: Point, offset: Vector) => void,
 
   wheel: (position: Point, event: WheelEvent) => void,
@@ -38,7 +39,7 @@ const OTHER_MASK = {
   'pointerdown':        1 << 0,
   'pointerup':          1 << 1,
   'pointerclick':       1 << 2,
-  'drag':               1 << 3,
+  'dragmove':           1 << 3,
   'wheel':              1 << 4,
 }
 export type OtherEventName = keyof typeof OTHER_MASK
@@ -76,7 +77,7 @@ export class EventManager {
       pointerdown: { set: new Set(), array: null },
       pointerup: { set: new Set(), array: null },
       pointerclick: { set: new Set(), array: null },
-      drag: { set: new Set(), array: null },
+      dragmove: { set: new Set(), array: null },
       wheel: { set: new Set(), array: null },
     }
     this.downNode = null
@@ -223,7 +224,7 @@ export class EventManager {
       this.nodesForEvent.pointerdown.array ??=
         Array.from(this.nodesForEvent.pointerdown.set)
           .concat(Array.from(this.nodesForEvent.pointerclick.set))
-          .concat(Array.from(this.nodesForEvent.drag.set))
+          .concat(Array.from(this.nodesForEvent.dragmove.set))
 
     let capturingNode = null
     let capturingNodePosition = null
@@ -244,12 +245,13 @@ export class EventManager {
       listeners.pointerdown?.forEach(l => l(capturingNodePosition!, event))
 
       // Drag start
-      if (listeners.drag?.size) {
+      if (listeners.dragmove?.size) {
         const position = positionAtObjectCached(capturingNode, event, this.transformCache)
         this.dragNode = capturingNode
         this.dragOrigin = position
         this.dragPrevious = position
         this.startDrag()
+        listeners.dragstart?.forEach(l => l(capturingNodePosition!))
         // Avoid triggering click
         this.downNode = null
       }
@@ -302,7 +304,7 @@ export class EventManager {
     const current = positionAtObjectCached(this.dragNode!, event, this.transformCache)
     const offset = new Vector(this.dragPrevious, current)
     const listeners = this.dragNode!.events.listeners
-    listeners.drag?.forEach(l => l(this.dragOrigin, current, offset))
+    listeners.dragmove?.forEach(l => l(this.dragOrigin, current, offset))
     this.dragPrevious = current
   }
 

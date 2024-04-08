@@ -63,7 +63,7 @@ export class Container {
 
   on<T extends EventName>(event: T, callback: Events[T]) {
     this._events ??= createEvents()
-    this._events.listeners[event] ??= new Set()
+    this._events.listeners[event] ??= new Set() as any
     this._events.listeners[event]!.add(callback)
     this.graph?.eventManager.on(event, this)
   }

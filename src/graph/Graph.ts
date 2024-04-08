@@ -28,9 +28,9 @@ export class Graph {
   height: number
 
   root: Container
+  background: Container
   layersByName: Record<string, Container>
 
-  mixins: Record<string, Mixin>
   _eventManager: EventManager | null
 
   constructor(root: HTMLElement, options?: Options) {
@@ -51,10 +51,10 @@ export class Graph {
 
     this.root = new Container()
     this.root.graph = this
-    this.root.add(new Node(new Box(0, 0, this.width, this.height)))
+    this.background = new Container([new Node(new Box(0, 0, this.width, this.height))])
+    this.root.add(this.background)
     this.layersByName = {}
 
-    this.mixins = {}
     this._eventManager = null
   }
 
@@ -85,7 +85,6 @@ export class Graph {
   }
 
   destroy() {
-    Object.values(this.mixins).forEach(m => m.disable())
     this._eventManager?.destroy()
   }
 

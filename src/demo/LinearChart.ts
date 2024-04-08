@@ -6,10 +6,8 @@ import { Style } from '../graph/Style'
 import { TextStyle } from '../graph/TextStyle'
 import { DragBehavior } from '../graph/DragBehavior'
 import { ScrollBehavior } from '../graph/ScrollBehavior'
-import { MoveBehavior } from '../graph/MoveBehavior'
 import { linearScale, LinearScale } from '../graph/linearScale'
 import { animate, Easing } from '../graph/animate'
-import { traverseWithTransform } from '../graph/traverse'
 import { positionAtObject } from '../graph/position'
 import * as Interval from '../graph/interval'
 import { PIXEL_RATIO } from '../graph/constants'
@@ -202,117 +200,86 @@ export class LinearChart extends chart.Graph {
     const cursor = new Node(cursorShape, Style.from({ strokeStyle: 'red' }))
     this.root.add(new Container([cursor]))
 
-    const drag = new DragBehavior(this, {
-      onStart: () => {
-        this.root.queryAll('path').forEach((p: Container) => {
-          p.alpha = 0.7
-        })
-        this.render()
-      },
-      onMove: (_, dx) => {
-        const content = this.layersByName.content
-        content.transform = content.transform.translate(dx, 0)
-        this.render()
-      },
-      onEnd: () => {
-        this.root.queryAll('path').forEach((p: Container) => {
-          p.alpha = 1
-        })
-        this.render()
-      },
+    this.background.on('dragstart', () => {
+      this.root.queryAll('path').forEach((p: Container) => {
+        p.alpha = 0.7
+      })
+      this.render()
     })
-    drag.enable()
-    this.mixins.drag = drag
+    this.background.on('dragmove', (_, __, { x: dx }) => {
+      const content = this.layersByName.content
+      content.transform = content.transform.translate(dx, 0)
+      this.render()
+    })
+    this.background.on('dragend', () => {
+      this.root.queryAll('path').forEach((p: Container) => {
+        p.alpha = 1
+      })
+      this.render()
+    })
 
     let scrollAnimation: Promise<void> | undefined
-    const scroll = new ScrollBehavior(this, {
-      onScrollHorizontal: (event) => {
-        const content = this.layersByName.content
-        content.transform = content.transform.translate(
-          event.deltaX / PIXEL_RATIO,
-          0
-        )
-        // FIXME:
-        // content.transform.tx = Math.min(content.transform.tx, 100)
-        // content.transform.tx = Math.max(content.transform.tx, -100)
-        this.render()
-      },
-      onScrollVertical: (event) => {
-        if (scrollAnimation) {
-          return
-        }
-        if (event.deltaX !== 0) {
-          return
-        }
-
-        const position = positionAtObject(this.layersByName.content, event)
-
-        const currentWidth = this.scale.x.domain[1] - this.scale.x.domain[0]
-        const nextWidth = currentWidth * (event.deltaY < 0 ? 0.5 : 2)
-
-        const n = position.x / (this.scale.x.range[1] - this.scale.x.range[0])
-
-        const center = this.scale.x.domain[0] + currentWidth * n
-
-        const extent = this.dataset.stats.range.maxX - this.dataset.stats.range.minX
-        if (nextWidth < extent / 10 || nextWidth > extent) {
-          return
-        }
-
-        scrollAnimation = animate({
-          from: 0,
-          to: 1,
-        }, (f) => {
-          const domainWidth = lerp(currentWidth, nextWidth, f)
-          const domain = Interval.clampWidth([
-            center - domainWidth * n,
-            center + domainWidth * (1 - n),
-          ] as [number, number], extent / 10, extent)
-
-          this.scale.x = linearScale(domain, this.scale.x.range)
-
-          const pathNode = new PathNode(this, this.dataset)
-          const pathAreaNode = new PathAreaNode(this, this.dataset)
-          this.layersByName.path.clear()
-          this.layersByName.path.add(pathNode)
-          this.layersByName.path.add(pathAreaNode)
-
-          this.populateDataset()
-
-          this.render()
-        })
-        .then(() => { scrollAnimation = undefined })
-      },
+    this.background.on('wheel', (_, event) => {
+      if (event.deltaX !== 0) {
+        onScrollHorizontal(event)
+      } else {
+        onScrollVertical(event)
+      }
     })
-    scroll.enable()
-    this.mixins.scroll = scroll
+    const onScrollHorizontal = (event: WheelEvent) => {
+      const content = this.layersByName.content
+      content.transform = content.transform.translate(
+        event.deltaX / PIXEL_RATIO,
+        0
+      )
+      this.render()
+    }
+    const onScrollVertical = (event: WheelEvent) => {
+      if (scrollAnimation) {
+        return
+      }
+      if (event.deltaX !== 0) {
+        return
+      }
 
-    // const hover = new MoveBehavior(this, {
-    //   onPointerMove: (event) => {
-    //     const position = new Point(event.offsetX, event.offsetY)
-    //
-    //     cursorShape.pc.x = position.x
-    //     cursorShape.pc.y = position.y
-    //
-    //     traverseWithTransform(this.layersByName.content, (element, _transform) => {
-    //       if (element.tags?.has('point')) {
-    //         const circle = (element.children[0] as Node)
-    //         const currentPosition = positionAtObject(circle, event)
-    //
-    //         if (circle.shape.contains(currentPosition)) {
-    //           animate({ from: element.scale, to: 2 }, (scale) => {
-    //             element.scale = scale
-    //             this.render()
-    //           })
-    //         }
-    //       }
-    //     })
-    //
-    //     this.render()
-    //   },
-    // })
-    // hover.enable()
-    // this.mixins.hover = hover
+      const position = positionAtObject(this.layersByName.content, event)
+
+      const currentWidth = this.scale.x.domain[1] - this.scale.x.domain[0]
+      const nextWidth = currentWidth * (event.deltaY < 0 ? 0.5 : 2)
+
+      const n = position.x / (this.scale.x.range[1] - this.scale.x.range[0])
+
+      const center = this.scale.x.domain[0] + currentWidth * n
+
+      const extent = this.dataset.stats.range.maxX - this.dataset.stats.range.minX
+      if (nextWidth < extent / 10 || nextWidth > extent) {
+        return
+      }
+
+      scrollAnimation = animate({
+        from: 0,
+        to: 1,
+      }, (f) => {
+        const domainWidth = lerp(currentWidth, nextWidth, f)
+        const domain = Interval.clampWidth([
+          center - domainWidth * n,
+          center + domainWidth * (1 - n),
+        ] as [number, number], extent / 10, extent)
+
+        this.scale.x = linearScale(domain, this.scale.x.range)
+
+        const pathNode = new PathNode(this, this.dataset)
+        const pathAreaNode = new PathAreaNode(this, this.dataset)
+        this.layersByName.path.clear()
+        this.layersByName.path.add(pathNode)
+        this.layersByName.path.add(pathAreaNode)
+
+        this.populateDataset()
+
+        this.render()
+      })
+      .then(() => { scrollAnimation = undefined })
+    }
 
 
     // Setup

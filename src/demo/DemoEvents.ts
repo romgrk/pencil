@@ -64,7 +64,7 @@ export class DemoEvents extends Graph {
         node.style = Style.from({ fillStyle: colors[~~(Math.random() * colors.length)] })
         this.render()
       })
-      circle.on('drag', (_, __, offset) => {
+      circle.on('dragmove', (_, __, offset) => {
         circle.x += offset.x
         circle.y += offset.y
         this.render()
