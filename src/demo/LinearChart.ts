@@ -243,6 +243,7 @@ export class LinearChart extends chart.Graph {
       }
 
       const position = positionAtObject(this.layersByName.content, event)
+      position.x -= this.layersByName.content.x
 
       const currentWidth = this.scale.x.domain[1] - this.scale.x.domain[0]
       const nextWidth = currentWidth * (event.deltaY < 0 ? 0.5 : 2)
