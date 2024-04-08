@@ -1,4 +1,4 @@
-import { Point, Matrix } from '2d-geometry'
+import { Point, Matrix, Vector } from '2d-geometry'
 import type { Graph } from './Graph'
 import type { Container } from './Container'
 import { positionAtObjectCached } from './position'
@@ -14,6 +14,11 @@ export type Events = {
   pointerdown: (position: Point, event: PointerEvent) => void,
   pointerup: (position: Point, event: PointerEvent) => void,
   pointerclick: (position: Point, event: MouseEvent) => void,
+
+  drag: (origin: Point, current: Point, offset: Vector) => void,
+  dragend: (origin: Point, current: Point, offset: Vector) => void,
+
+  wheel: (position: Point, event: WheelEvent) => void,
 }
 export type EventListeners = { [K in keyof Events]?: Set<Events[K]> }
 export type EventName = keyof Events
@@ -29,12 +34,14 @@ const MOVE_MASK = {
 const MOVE_MASK_FULL = Object.values(MOVE_MASK).reduce((full, current) => full | current, 0)
 export type MoveEventName = keyof typeof MOVE_MASK
 
-const CONTACT_MASK = {
+const OTHER_MASK = {
   'pointerdown':        1 << 0,
   'pointerup':          1 << 1,
   'pointerclick':       1 << 2,
+  'drag':               1 << 3,
+  'wheel':              1 << 4,
 }
-export type ContactEventName = keyof typeof CONTACT_MASK
+export type OtherEventName = keyof typeof OTHER_MASK
 
 export class EventManager {
   graph: Graph
@@ -45,12 +52,16 @@ export class EventManager {
   hoverNode: Container | null
   enterNodes: Set<Container>
 
-  nodesForEvent: Record<ContactEventName, {
+  nodesForEvent: Record<OtherEventName, {
     set: Set<Container>,
     array: Container[] | null
   }>
   downNode: Container | null
   upNode: Container | null
+
+  dragNode: Container | null
+  dragOrigin: Point
+  dragPrevious: Point
 
   constructor(graph: Graph) {
     this.graph = graph
@@ -65,9 +76,14 @@ export class EventManager {
       pointerdown: { set: new Set(), array: null },
       pointerup: { set: new Set(), array: null },
       pointerclick: { set: new Set(), array: null },
+      drag: { set: new Set(), array: null },
+      wheel: { set: new Set(), array: null },
     }
     this.downNode = null
     this.upNode = null
+    this.dragNode = null
+    this.dragOrigin = Point.EMPTY
+    this.dragPrevious = Point.EMPTY
 
     this.enable()
   }
@@ -77,6 +93,8 @@ export class EventManager {
     this.graph.canvas.addEventListener('pointerdown', this.onPointerDown)
     this.graph.canvas.addEventListener('pointerup',   this.onPointerUp)
     this.graph.canvas.addEventListener('click',       this.onPointerClick)
+    this.graph.canvas.addEventListener('touchstart',  this.onTouchStart)
+    this.graph.canvas.addEventListener('wheel',       this.onWheel)
   }
 
   disable() {
@@ -84,68 +102,20 @@ export class EventManager {
     this.graph.canvas.removeEventListener('pointerdown', this.onPointerDown)
     this.graph.canvas.removeEventListener('pointerup',   this.onPointerUp)
     this.graph.canvas.removeEventListener('click',       this.onPointerClick)
+    this.graph.canvas.removeEventListener('touchstart',  this.onTouchStart)
+    this.graph.canvas.removeEventListener('wheel',       this.onWheel)
+    this.stopDrag()
   }
 
-  onPointerDown = (event: PointerEvent) => {
-    const nodes =
-      this.nodesForEvent.pointerdown.array ??=
-        Array.from(this.nodesForEvent.pointerdown.set)
-          .concat(Array.from(this.nodesForEvent.pointerclick.set))
-
-    let capturingNode = null
-    let capturingNodePosition = null
-
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i]
-      const position = positionAtObjectCached(node, event, this.transformCache)
-      if (node.contains(position)) {
-        capturingNode = node
-        capturingNodePosition = position
-      }
-    }
-
-    if (capturingNode) {
-      const listeners = capturingNode.events.listeners
-      listeners.pointerdown?.forEach(l => l(capturingNodePosition!, event))
-    }
-
-    this.downNode = capturingNode
+  startDrag() {
+    document.addEventListener('pointermove', this.onDragMove)
+    document.addEventListener('pointerup',   this.onDragEnd)
   }
 
-  onPointerUp = (event: PointerEvent) => {
-    const nodes =
-      this.nodesForEvent.pointerup.array ??=
-        Array.from(this.nodesForEvent.pointerup.set)
-          .concat(Array.from(this.nodesForEvent.pointerclick.set))
-
-    let capturingNode = null
-    let capturingNodePosition = null
-
-    for (let i = 0; i < nodes.length; i++) {
-      const node = nodes[i]
-      const position = positionAtObjectCached(node, event, this.transformCache)
-      if (node.contains(position)) {
-        capturingNode = node
-        capturingNodePosition = position
-      }
-    }
-
-    if (capturingNode) {
-      const listeners = capturingNode.events.listeners
-      listeners.pointerup?.forEach(l => l(capturingNodePosition!, event))
-      if (capturingNode === this.downNode) {
-        listeners.pointerclick?.forEach(l => l(capturingNodePosition!, event))
-      }
-    }
-  }
-
-  onPointerClick = (event: MouseEvent) => {
-    if (this.downNode && this.upNode && this.downNode === this.upNode) {
-      const position = positionAtObjectCached(this.upNode, event, this.transformCache)
-      this.upNode.events.listeners.pointerclick?.forEach(l => l(position, event))
-    }
-    this.downNode = null
-    this.upNode = null
+  stopDrag() {
+    document.removeEventListener('pointermove', this.onDragMove)
+    document.removeEventListener('pointerup',   this.onDragEnd)
+    this.dragNode = null
   }
 
   destroy() {
@@ -165,9 +135,9 @@ export class EventManager {
       if (this.moveNodes.delete(node)) {
         this.moveNodesAsArray = null
       }
-      for (const event in CONTACT_MASK) {
-        if (this.nodesForEvent[event as ContactEventName].set.delete(node)) {
-          this.nodesForEvent[event as ContactEventName].array = null
+      for (const event in OTHER_MASK) {
+        if (this.nodesForEvent[event as OtherEventName].set.delete(node)) {
+          this.nodesForEvent[event as OtherEventName].array = null
         }
       }
     }
@@ -179,9 +149,9 @@ export class EventManager {
       this.moveNodes.add(node)
       this.moveNodesAsArray = null
     }
-    if (event in CONTACT_MASK) {
-      this.nodesForEvent[event as ContactEventName].set.add(node)
-      this.nodesForEvent[event as ContactEventName].array = null
+    if (event in OTHER_MASK) {
+      this.nodesForEvent[event as OtherEventName].set.add(node)
+      this.nodesForEvent[event as OtherEventName].array = null
     }
   }
 
@@ -192,10 +162,10 @@ export class EventManager {
         this.moveNodesAsArray = null
       }
     }
-    if (event in CONTACT_MASK) {
+    if (event in OTHER_MASK) {
       if ((node.events.listeners[event]?.size ?? 0) === 0) {
-        this.nodesForEvent[event as ContactEventName].set.delete(node)
-        this.nodesForEvent[event as ContactEventName].array = null
+        this.nodesForEvent[event as OtherEventName].set.delete(node)
+        this.nodesForEvent[event as OtherEventName].array = null
       }
     }
   }
@@ -246,6 +216,123 @@ export class EventManager {
     }
 
     this.enterNodes = enterNodes
+  }
+
+  onPointerDown = (event: PointerEvent) => {
+    const nodes =
+      this.nodesForEvent.pointerdown.array ??=
+        Array.from(this.nodesForEvent.pointerdown.set)
+          .concat(Array.from(this.nodesForEvent.pointerclick.set))
+          .concat(Array.from(this.nodesForEvent.drag.set))
+
+    let capturingNode = null
+    let capturingNodePosition = null
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const position = positionAtObjectCached(node, event, this.transformCache)
+      if (node.contains(position)) {
+        capturingNode = node
+        capturingNodePosition = position
+      }
+    }
+
+    this.downNode = capturingNode
+
+    if (capturingNode) {
+      const listeners = capturingNode.events.listeners
+      listeners.pointerdown?.forEach(l => l(capturingNodePosition!, event))
+
+      // Drag start
+      if (listeners.drag?.size) {
+        const position = positionAtObjectCached(capturingNode, event, this.transformCache)
+        this.dragNode = capturingNode
+        this.dragOrigin = position
+        this.dragPrevious = position
+        this.startDrag()
+        // Avoid triggering click
+        this.downNode = null
+      }
+    }
+  }
+
+  onPointerUp = (event: PointerEvent) => {
+    const nodes =
+      this.nodesForEvent.pointerup.array ??=
+        Array.from(this.nodesForEvent.pointerup.set)
+          .concat(Array.from(this.nodesForEvent.pointerclick.set))
+
+    let capturingNode = null
+    let capturingNodePosition = null
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const position = positionAtObjectCached(node, event, this.transformCache)
+      if (node.contains(position)) {
+        capturingNode = node
+        capturingNodePosition = position
+      }
+    }
+
+    if (capturingNode) {
+      const listeners = capturingNode.events.listeners
+      listeners.pointerup?.forEach(l => l(capturingNodePosition!, event))
+      if (capturingNode === this.downNode) {
+        listeners.pointerclick?.forEach(l => l(capturingNodePosition!, event))
+      }
+    }
+  }
+
+  onPointerClick = (event: MouseEvent) => {
+    if (this.downNode && this.upNode && this.downNode === this.upNode) {
+      const position = positionAtObjectCached(this.upNode, event, this.transformCache)
+      this.upNode.events.listeners.pointerclick?.forEach(l => l(position, event))
+    }
+    this.downNode = null
+    this.upNode = null
+  }
+
+  onTouchStart = (event: TouchEvent) => {
+    if (this.dragNode) {
+      event.preventDefault()
+    }
+  }
+
+  onDragMove = (event: PointerEvent) => {
+    const current = positionAtObjectCached(this.dragNode!, event, this.transformCache)
+    const offset = new Vector(this.dragPrevious, current)
+    const listeners = this.dragNode!.events.listeners
+    listeners.drag?.forEach(l => l(this.dragOrigin, current, offset))
+    this.dragPrevious = current
+  }
+
+  onDragEnd = (event: PointerEvent) => {
+    const current = positionAtObjectCached(this.dragNode!, event, this.transformCache)
+    const offset = new Vector(this.dragPrevious, current)
+    const listeners = this.dragNode!.events.listeners
+    listeners.dragend?.forEach(l => l(this.dragOrigin, current, offset))
+    this.stopDrag()
+  }
+
+  onWheel = (event: WheelEvent) => {
+    const nodes = this.nodesForEvent.wheel.array ??= Array.from(this.nodesForEvent.wheel.set)
+
+    let capturingNode = null
+    let capturingNodePosition = null
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      const position = positionAtObjectCached(node, event, this.transformCache)
+      if (node.contains(position)) {
+        capturingNode = node
+        capturingNodePosition = position
+      }
+    }
+
+    if (capturingNode) {
+      const listeners = capturingNode.events.listeners
+      listeners.wheel?.forEach(l => l(capturingNodePosition!, event))
+    }
   }
 }
 

@@ -3,7 +3,7 @@ import { Debug } from './demo/Debug'
 import { PencilAnimation } from './demo/PencilAnimation'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
-import { CustomGraph } from './CustomGraph'
+import { DemoEvents } from './demo/DemoEvents'
 import data from './node-gtk-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
@@ -48,7 +48,7 @@ function App() {
       }
       {
         <GraphContainer
-          type={CustomGraph}
+          type={DemoEvents}
           width={800}
           height={500}
         />

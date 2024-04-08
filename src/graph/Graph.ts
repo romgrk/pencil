@@ -6,9 +6,7 @@ import { Pencil } from './Pencil'
 import { PIXEL_RATIO } from './constants'
 import { traverse } from'./traverse'
 
-const CONTENT = `
-  <canvas />
-`
+const CONTENT = `<canvas />`
 
 export type Options = {
   width?: number,

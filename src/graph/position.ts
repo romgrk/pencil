@@ -1,7 +1,9 @@
 import { Point, Matrix } from '2d-geometry'
 import { Container } from './Container'
 
-export function positionAtObject(object: Container, event: WheelEvent | PointerEvent) {
+type Event = { offsetX: number, offsetY: number }
+
+export function positionAtObject(object: Container, event: Event) {
   let current = object.parent as Container | null
 
   let transforms = []
@@ -20,7 +22,7 @@ export function positionAtObject(object: Container, event: WheelEvent | PointerE
 
 export function positionAtObjectCached(
   object: Container,
-  event: WheelEvent | PointerEvent | MouseEvent,
+  event: Event,
   transformAtObject: Map<Container, Matrix>
 ) {
   let current = object.parent as Container | null

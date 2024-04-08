@@ -1,13 +1,12 @@
-import { Circle, Bezier, Path, Segment, Matrix, point } from '2d-geometry'
-import { Graph } from './graph/Graph'
-import { Container } from './graph/Container'
-import { Node } from './graph/Node'
-import { Style } from './graph/Style'
-import { animate, Animation } from './graph/animate'
-import * as elements from './graph/elements'
+import { Circle, Matrix } from '2d-geometry'
+import { Graph } from '../graph/Graph'
+import { Container } from '../graph/Container'
+import { Node } from '../graph/Node'
+import { Style } from '../graph/Style'
+import { Animation } from '../graph/animate'
+import * as elements from '../graph/elements'
 
-
-export class CustomGraph extends Graph {
+export class DemoEvents extends Graph {
   constructor(domNode: any, options: any) {
     super(domNode, options)
 
@@ -65,6 +64,15 @@ export class CustomGraph extends Graph {
         node.style = Style.from({ fillStyle: colors[~~(Math.random() * colors.length)] })
         this.render()
       })
+      circle.on('drag', (_, __, offset) => {
+        circle.x += offset.x
+        circle.y += offset.y
+        this.render()
+      })
+      circle.on('wheel', (_, event) => {
+        circle.scale *= event.deltaY > 0 ? 1.1 : 0.9
+        this.render()
+      })
       content.add(circle)
     }
 
@@ -110,48 +118,6 @@ export class CustomGraph extends Graph {
       const y = Math.round(Math.random() * this.height)
       const color = colors[~~(Math.random() * colors.length)]
       addBall(color, x, y)
-    }
-
-    {
-      const style = Style.from({ lineWidth: 3, strokeStyle: '#566eff' })
-      const path = new Path([
-        new Bezier(
-          point(0, 0),
-          point(0,   -130),
-          point(200, -130),
-          point(200, 0),
-        ),
-        new Segment(
-          point(200, 0),
-          point(220, 0),
-        ),
-        new Bezier(
-          point(220, 0),
-          point(220, -150),
-          point(-20, -150),
-          point(-20, 0),
-        ),
-        new Segment(
-          point(-20, 0),
-          point(0, 0),
-        ),
-      ])
-      const node = new Node(
-        Path.EMPTY,
-        style
-      )
-      const container = new Container([
-        node,
-      ])
-      container.x = 200
-      container.y = 400
-      content.add(container)
-
-      animate({ from: 0, to: 1, duration: 2000 }, (f) => {
-        const partial = path.slice(0, path.length * f)
-        node.shape = partial
-        this.render()
-      })
     }
 
     this.root.add(cursor)
