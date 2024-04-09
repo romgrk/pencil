@@ -149,7 +149,6 @@ export class Pencil {
         throw new Error('unimplemented')
       }
     }
-    p.closePath()
     shape._data = p
     return p
   }
@@ -211,5 +210,8 @@ function drawPath(p: Path2D, shape: Polygon | Path) {
         throw new Error('unimplemented')
       }
     }
+  }
+  if (shape instanceof Polygon) {
+    p.closePath()
   }
 }

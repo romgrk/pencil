@@ -58,6 +58,14 @@ export class Text extends Node {
     return this._dimensions
   }
 
+  get width() {
+    return this.dimensions.width
+  }
+
+  get height() {
+    return this.dimensions.actualBoundingBoxAscent + this.dimensions.actualBoundingBoxDescent
+  }
+
   render(graph: Graph) {
     const { pencil } = graph
     pencil.style(this.style)

@@ -2,6 +2,7 @@ import { Point, Matrix, Vector } from '2d-geometry'
 import type { Graph } from './Graph'
 import type { Container } from './Container'
 import { positionAtObjectCached } from './position'
+import { applyIndexes } from './traverse'
 
 export type Events = {
   pointerover: (position: Point, event: PointerEvent) => void,
@@ -108,6 +109,13 @@ export class EventManager {
     this.stopDrag()
   }
 
+  updateIndexes() {
+    if (this.graph._validIndexes === false) {
+      this.graph._validIndexes = true
+      applyIndexes(this.graph.root)
+    }
+  }
+
   startDrag() {
     document.addEventListener('pointermove', this.onDragMove)
     document.addEventListener('pointerup',   this.onDragEnd)
@@ -176,9 +184,10 @@ export class EventManager {
   }
 
   onPointerMove = (event: PointerEvent) => {
+    this.updateIndexes()
     const moveNodes = this.moveNodesAsArray ??= Array.from(this.moveNodes)
     const enterNodes = new Set<Container>()
-    let enterNodeLast = null as Container | null
+    let capturingNode = null as Container | null
 
     for (let i = 0; i < moveNodes.length; i++) {
       const node = moveNodes[i]
@@ -186,7 +195,9 @@ export class EventManager {
       const position = positionAtObjectCached(node, event, this.transformCache)
 
       if (node.contains(position)) {
-        enterNodeLast = node
+        if (!capturingNode || node.index > capturingNode.index) {
+          capturingNode = node
+        }
 
         enterNodes.add(node)
         if (!this.enterNodes.has(node)) {
@@ -201,25 +212,25 @@ export class EventManager {
       listeners.pointermove_global?.forEach(l => l(position, event))
     }
 
-    if (this.hoverNode && this.hoverNode !== enterNodeLast) {
+    if (this.hoverNode && this.hoverNode !== capturingNode) {
       const position = positionAtObjectCached(this.hoverNode, event, this.transformCache)
       this.hoverNode.events.listeners.pointerout?.forEach(l => l(position, event))
       this.hoverNode = null
       this.graph.canvas.style.cursor = 'auto'
     }
 
-    // FIXME: enterNodeLast not precise enough for good hover behavior
-    if (enterNodeLast && enterNodeLast !== this.hoverNode) {
-      const position = positionAtObjectCached(enterNodeLast, event, this.transformCache)
-      enterNodeLast.events.listeners.pointerover?.forEach(l => l(position, event))
-      this.hoverNode = enterNodeLast
-      this.graph.canvas.style.cursor = enterNodeLast.events.cursor
+    if (capturingNode && capturingNode !== this.hoverNode) {
+      const position = positionAtObjectCached(capturingNode, event, this.transformCache)
+      capturingNode.events.listeners.pointerover?.forEach(l => l(position, event))
+      this.hoverNode = capturingNode
+      this.graph.canvas.style.cursor = capturingNode.events.cursor
     }
 
     this.enterNodes = enterNodes
   }
 
   onPointerDown = (event: PointerEvent) => {
+    this.updateIndexes()
     const nodes =
       this.nodesForEvent.pointerdown.array ??=
         Array.from(this.nodesForEvent.pointerdown.set)
@@ -233,8 +244,10 @@ export class EventManager {
       const node = nodes[i]
       const position = positionAtObjectCached(node, event, this.transformCache)
       if (node.contains(position)) {
-        capturingNode = node
-        capturingNodePosition = position
+        if (!capturingNode || node.index > capturingNode.index) {
+          capturingNode = node
+          capturingNodePosition = position
+        }
       }
     }
 
@@ -259,6 +272,7 @@ export class EventManager {
   }
 
   onPointerUp = (event: PointerEvent) => {
+    this.updateIndexes()
     const nodes =
       this.nodesForEvent.pointerup.array ??=
         Array.from(this.nodesForEvent.pointerup.set)
@@ -271,8 +285,10 @@ export class EventManager {
       const node = nodes[i]
       const position = positionAtObjectCached(node, event, this.transformCache)
       if (node.contains(position)) {
-        capturingNode = node
-        capturingNodePosition = position
+        if (!capturingNode || node.index > capturingNode.index) {
+          capturingNode = node
+          capturingNodePosition = position
+        }
       }
     }
 
@@ -317,6 +333,7 @@ export class EventManager {
   }
 
   onWheel = (event: WheelEvent) => {
+    this.updateIndexes()
     const nodes = this.nodesForEvent.wheel.array ??= Array.from(this.nodesForEvent.wheel.set)
 
     let capturingNode = null
@@ -326,8 +343,10 @@ export class EventManager {
       const node = nodes[i]
       const position = positionAtObjectCached(node, event, this.transformCache)
       if (node.contains(position)) {
-        capturingNode = node
-        capturingNodePosition = position
+        if (!capturingNode || node.index > capturingNode.index) {
+          capturingNode = node
+          capturingNodePosition = position
+        }
       }
     }
 

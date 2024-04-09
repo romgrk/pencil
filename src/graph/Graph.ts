@@ -32,6 +32,7 @@ export class Graph {
   layersByName: Record<string, Container>
 
   _eventManager: EventManager | null
+  _validIndexes: boolean
   _disposables: Function[]
 
   constructor(root: HTMLElement, options?: Options) {
@@ -57,6 +58,7 @@ export class Graph {
     this.layersByName = {}
 
     this._eventManager = null
+    this._validIndexes = false
     this._disposables = []
   }
 
@@ -69,6 +71,7 @@ export class Graph {
   }
 
   attach(node: Container) {
+    this._validIndexes = false
     traverse(node, node => {
       node.graph = this
       if (node._events) {
@@ -78,6 +81,7 @@ export class Graph {
   }
 
   detach(node: Container) {
+    this._validIndexes = false
     traverse(node, node => {
       node.graph = null
       if (node._events) {

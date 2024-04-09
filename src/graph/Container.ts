@@ -11,6 +11,7 @@ export type EventMeta = {
 const createEvents = () => ({ moveFlag: 0, cursor: 'auto', listeners: {} }) as EventMeta
 
 export class Container {
+  index: number
   graph: Graph | null
   parent: Container | null
   children: Container[]
@@ -29,6 +30,7 @@ export class Container {
   _events: EventMeta | null
 
   constructor(children: Container[] = []) {
+    this.index = -1
     this.graph = null
     this.parent = null
     this.children = children

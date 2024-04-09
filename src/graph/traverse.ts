@@ -1,4 +1,3 @@
-import { Matrix } from '2d-geometry'
 import type { Container } from './Container'
 
 export function traverse(b: Container, fn: (b: Container) => void) {
@@ -6,28 +5,19 @@ export function traverse(b: Container, fn: (b: Container) => void) {
   b.children.forEach(c => traverse(c, fn))
 }
 
-export function traverseWithTransform(root: Container, fn: (element: Container, transform: Matrix) => void) {
-  const transforms = [Matrix.IDENTITY]
-  let currentTransform = transforms[0]
-
-  function _recurse(element: Container, fn: (element: Container, transform: Matrix) => void) {
-    currentTransform =
-      element.transform === Matrix.IDENTITY ?
-        currentTransform :
-        currentTransform.multiply(element.transform)
-
-    transforms.push(currentTransform)
-
-    fn(element, currentTransform)
-
-    for (let i = 0; i < element.children.length; i++) {
-      _recurse(element.children[i], fn)
-    }
-
-    transforms.pop()
-
-    currentTransform = transforms[transforms.length - 1]
+export function applyIndexes(node: Container, ref = { nextId: 1 }) {
+  node.index = ref.nextId++
+  for (let i = 0; i < node.children.length; i++) {
+    applyIndexes(node.children[i], ref)
   }
-
-  _recurse(root, fn)
 }
+
+
+// { id: 1, children: [
+//   { id: 2, children: [
+//     { id: 3, children: [] },
+//   ] },
+//   { id: 4, children: [] },
+// ] },
+// { id: 5, children: [
+// ] },
