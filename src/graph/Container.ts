@@ -171,6 +171,8 @@ export class Container {
   }
 
   render(graph: Graph) {
+    if (!this.visible) return
+
     const { pencil } = graph
 
     const needsContext = this.needsContext()
@@ -183,7 +185,7 @@ export class Container {
       const child = this.children[j]
       if (child.constructor === Container) {
         child.render(graph)
-      } else {
+      } else if (child.visible) {
         const needsContext = child.needsContext()
 
         if (needsContext) {

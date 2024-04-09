@@ -48,11 +48,11 @@ function App() {
         // />
       }
       {
-        // <GraphContainer
-        //   type={PathEditor}
-        //   width={800}
-        //   height={500}
-        // />
+        <GraphContainer
+          type={PathEditor}
+          width={800}
+          height={500}
+        />
       }
       {
         // <GraphContainer
@@ -62,11 +62,11 @@ function App() {
         // />
       }
       {
-        <GraphContainer
-          type={DemoStressTestKonva}
-          width={615}
-          height={300}
-        />
+        // <GraphContainer
+        //   type={DemoStressTestKonva}
+        //   width={615}
+        //   height={300}
+        // />
       }
       {
         // <GraphContainer
