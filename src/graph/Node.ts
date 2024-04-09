@@ -30,7 +30,7 @@ export class Node extends Container {
 }
 
 export class Text extends Node {
-  static STYLE = Style.from({ fillStyle: 'black' })
+  static STYLE = Style.from({ fill: 'black' })
 
   readonly text: string
   textStyle: TextStyle

@@ -5,7 +5,7 @@ import { Style } from './Style'
 
 
 export class Grid extends Node {
-  static style = Style.from({ strokeStyle: '#ff000033' })
+  static style = Style.from({ stroke: '#ff000033' })
 
   style: Style
   offset: number

@@ -27,8 +27,8 @@ const colors = {
 
 const PADDING = 50
 
-const AXIS_TICK_STYLE = Style.from({ strokeStyle: colors.axisLine })
-const LABEL_STYLE = Style.from({ fillStyle: colors.axisLabel })
+const AXIS_TICK_STYLE = Style.from({ stroke: colors.axisLine })
+const LABEL_STYLE = Style.from({ fill: colors.axisLabel })
 const LABEL_TEXT_STYLE = TextStyle.from({
   font: '16px serif',
   textAlign: 'center',
@@ -36,7 +36,7 @@ const LABEL_TEXT_STYLE = TextStyle.from({
 })
 
 class AxisLines extends Node {
-  static style = Style.from({ strokeStyle: colors.axisLine })
+  static style = Style.from({ stroke: colors.axisLine })
 
   factor: number = 1
 
@@ -64,7 +64,7 @@ class AxisLines extends Node {
 class PathNode extends Node {
   static style = Style.from({
     lineWidth: 2,
-    strokeStyle: colors.pathStroke
+    stroke: colors.pathStroke
   })
 
   static buildPath(chart: LinearChart, dataset: Dataset) {
@@ -128,7 +128,7 @@ class PathAreaNode extends Node {
 
     this.shape = path
     this.style = Style.from({
-      fillStyle: {
+      fill: {
         positions: [0, 0, 0, chart.content.height],
         stops: [
           [0.0, colors.pathStroke + '11'],
@@ -195,7 +195,7 @@ export class LinearChart extends chart.Graph {
     this.root.add(this.layersByName.axis)
 
     const cursorShape = new Circle(100, 100, 10)
-    const cursor = new Node(cursorShape, Style.from({ strokeStyle: 'red' }))
+    const cursor = new Node(cursorShape, Style.from({ stroke: 'red' }))
     this.root.add(new Container([cursor]))
 
     this.background.on('dragstart', () => {
@@ -335,7 +335,7 @@ export class LinearChart extends chart.Graph {
 
       const point = new Container([
         new Node(
-          new Circle(0, 0, r), Style.from({ fillStyle: colors.pointFill })
+          new Circle(0, 0, r), Style.from({ fill: colors.pointFill })
         )
       ])
       point.addTag('point')

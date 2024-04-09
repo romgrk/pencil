@@ -4,6 +4,7 @@ import { PencilAnimation } from './demo/PencilAnimation'
 import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './graph/Dataset'
 import { DemoEvents } from './demo/DemoEvents'
+import DemoStressTestKonva from './demo/DemoStressTestKonva'
 import { PathEditor } from './demo/PathEditor'
 import data from './node-gtk-downloads.json'
 
@@ -61,6 +62,13 @@ function App() {
         // />
       }
       {
+        <GraphContainer
+          type={DemoStressTestKonva}
+          width={615}
+          height={300}
+        />
+      }
+      {
         // <GraphContainer
         //   type={Debug}
         //   width={800}
@@ -68,11 +76,11 @@ function App() {
         // />
       }
       {
-        <GraphContainer
-          type={PencilAnimation}
-          width={700}
-          height={300}
-        />
+        // <GraphContainer
+        //   type={PencilAnimation}
+        //   width={700}
+        //   height={300}
+        // />
       }
     </div>
   )

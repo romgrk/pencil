@@ -6,14 +6,14 @@ type LinearGradient = {
 
 export type StyleOptions = {
   lineWidth: number,
-  strokeStyle: LinearGradient | string | null,
-  fillStyle: LinearGradient | string | null,
+  stroke: LinearGradient | string | null,
+  fill: LinearGradient | string | null,
 }
 
 const DEFAULT_OPTIONS = {
   lineWidth: 1,
-  strokeStyle: null,
-  fillStyle: null,
+  stroke: null,
+  fill: null,
 }
 
 let nextId = 1
@@ -28,14 +28,14 @@ export class Style {
   static EMPTY = Style.from({})
 
   static from(someOptions: Partial<StyleOptions>): Style;
-  static from(lineWidth: number, strokeStyle?: string | null, fillStyle?: LinearGradient | string | null): Style;
+  static from(lineWidth: number, stroke?: string | null, fill?: LinearGradient | string | null): Style;
   static from(a: unknown, b?: unknown, c?: unknown) {
     let options: StyleOptions
     let hash: string
 
     if (typeof a === 'object') {
       options = Object.assign({}, DEFAULT_OPTIONS, a)
-      hash = options.lineWidth + '#' + options.strokeStyle + '#' + JSON.stringify(options.fillStyle)
+      hash = options.lineWidth + '#' + options.stroke + '#' + JSON.stringify(options.fill)
       {
         const style = styleByHash.get(hash)
         if (style) {
@@ -48,16 +48,16 @@ export class Style {
     }
     else {
       const lineWidth   = (a as number) ?? DEFAULT_OPTIONS.lineWidth
-      const strokeStyle = (b as string) ?? DEFAULT_OPTIONS.strokeStyle
-      const fillStyle   = (c as string) ?? DEFAULT_OPTIONS.fillStyle
-      hash = lineWidth + '##' + strokeStyle + '##' + fillStyle
+      const stroke = (b as string) ?? DEFAULT_OPTIONS.stroke
+      const fill   = (c as string) ?? DEFAULT_OPTIONS.fill
+      hash = lineWidth + '##' + stroke + '##' + fill
       {
         const style = styleByHash.get(hash)
         if (style) {
           return style
         }
       }
-      options = { lineWidth, strokeStyle, fillStyle }
+      options = { lineWidth, stroke, fill }
     }
 
     const style = new Style(nextId++, options)
@@ -83,26 +83,26 @@ export class Style {
     this.options = options
   }
 
-  strokeStyle(ctx: CanvasRenderingContext2D) {
-    if (this.options.strokeStyle === null) {
+  stroke(ctx: CanvasRenderingContext2D) {
+    if (this.options.stroke === null) {
       return
     }
-    if (typeof this.options.strokeStyle === 'string') {
-      ctx.strokeStyle = this.options.strokeStyle
+    if (typeof this.options.stroke === 'string') {
+      ctx.strokeStyle = this.options.stroke
       return
     }
-    ctx.strokeStyle = Style.linearGradient(ctx, this.options.strokeStyle)
+    ctx.strokeStyle = Style.linearGradient(ctx, this.options.stroke)
   }
 
-  fillStyle(ctx: CanvasRenderingContext2D) {
-    if (this.options.fillStyle === null) {
+  fill(ctx: CanvasRenderingContext2D) {
+    if (this.options.fill === null) {
       return
     }
-    if (typeof this.options.fillStyle === 'string') {
-      ctx.fillStyle = this.options.fillStyle
+    if (typeof this.options.fill === 'string') {
+      ctx.fillStyle = this.options.fill
       return
     }
-    ctx.fillStyle = Style.linearGradient(ctx, this.options.fillStyle)
+    ctx.fillStyle = Style.linearGradient(ctx, this.options.fill)
   }
 }
 

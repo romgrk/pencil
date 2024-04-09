@@ -2,7 +2,7 @@ import { Circle, Box, Matrix, Point, Path } from '2d-geometry'
 import { Graph, Container, Node, Style, Text, TextStyle, Animation } from '../graph'
 import * as elements from '../graph/elements'
 
-const pathStyle = Style.from({ strokeStyle: '#e45050' })
+const pathStyle = Style.from({ stroke: '#e45050' })
 
 export class PathEditor extends Graph {
   points: Point[]
@@ -13,7 +13,7 @@ export class PathEditor extends Graph {
 
     const content = new Container([], Matrix.IDENTITY)
     const cursor = new Container([
-      new Node(new Circle(0, 0, 8), Style.from({ strokeStyle: '#e0e0e0' }))
+      new Node(new Circle(0, 0, 8), Style.from({ stroke: '#e0e0e0' }))
     ])
     const pathNode = new Node(Path.EMPTY, pathStyle)
 
@@ -67,7 +67,7 @@ export class PathEditor extends Graph {
       'Draw',
       Point.EMPTY,
       TextStyle.from({ font: '20px sans-serif', textAlign: 'center' }),
-      Style.from({ fillStyle: 'red', }),
+      Style.from({ fill: 'red', }),
     )
     const width = 20 + Math.max(100, text.dimensions.width)
     const height = 20 + Math.max(text.dimensions.fontBoundingBoxDescent)
@@ -82,7 +82,7 @@ export class PathEditor extends Graph {
             +width / 2,
             +height / 2,
           ),
-          Style.from({ fillStyle: '#656565'})
+          Style.from({ fill: '#656565'})
         ),
         text
       ]
@@ -91,7 +91,7 @@ export class PathEditor extends Graph {
     button.y = 10
 
     const tools = new Container([
-      new Node(new Circle(0, 0, 50), Style.from({ strokeStyle: 'red' })),
+      new Node(new Circle(0, 0, 50), Style.from({ stroke: 'red' })),
       button,
     ])
     tools.x = 100

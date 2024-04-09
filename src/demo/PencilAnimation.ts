@@ -38,7 +38,7 @@ export class PencilAnimation extends Graph {
       for (let i = 0; i < paths.length; i++) {
         const path = paths[i]
         const node = new Node(path.slice(0, path.length * 0),
-          Style.from({ lineWidth: 1, strokeStyle: colors[i % colors.length] }))
+          Style.from({ lineWidth: 1, stroke: colors[i % colors.length] }))
         strokes.add(node)
 
         const n = 200
@@ -52,7 +52,7 @@ export class PencilAnimation extends Graph {
     })
     .then(() => {
       for (let i = 0; i < paths.length; i++) {
-        filling.add(new Node(paths[i], Style.from({ fillStyle: colors[i % colors.length] })))
+        filling.add(new Node(paths[i], Style.from({ fill: colors[i % colors.length] })))
       }
       return animate({duration: 1000}, f => {
         filling.alpha = 0.8 * f

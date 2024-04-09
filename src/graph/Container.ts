@@ -1,4 +1,4 @@
-import { Point, Matrix } from '2d-geometry'
+import { Point, Matrix, Shape } from '2d-geometry'
 import type { Graph } from './Graph'
 import { traverse } from './traverse'
 import type { EventName, Events, EventListeners } from './EventManager'
@@ -17,23 +17,37 @@ export class Container {
   tags: Set<string> | null // FIXME: integers?
 
   visible: boolean
-  transform: Matrix
-  mask: Container | null
+  mask: Shape | null
   alpha: number
+
+  _x: number
+  _y: number
+  _rotation: number
+  _scale: number
+  _transform: Matrix | null
 
   _events: EventMeta | null
 
-  constructor(children: Container[] = [], transform?: Matrix, mask?: Container, alpha?: number) {
+  constructor(children: Container[] = []) {
     this.graph = null
     this.parent = null
     this.children = children
     this.tags = null
 
     this.visible = true
-    this.transform = transform ?? Matrix.IDENTITY.clone()
-    this.mask = mask ?? null
+    this.mask = null
     this.alpha = NaN
-    this.alpha = alpha ?? 1
+    this.alpha = 1
+
+    this._x = NaN
+    this._x = 0
+    this._y = NaN
+    this._y = 0
+    this._rotation = NaN
+    this._rotation = 0
+    this._scale = NaN
+    this._scale = 1
+    this._transform = null
 
     this._events = null
 
@@ -43,22 +57,35 @@ export class Container {
 
   }
 
-  get x() { return this.transform.tx }
-  set x(n: number) { this.transform.tx = n }
+  get x() { return this._x }
+  set x(n: number) { this._x = n; this._transform = null }
 
-  get y() { return this.transform.ty }
-  set y(n: number) { this.transform.ty = n }
+  get y() { return this._y }
+  set y(n: number) { this._y = n; this._transform = null }
 
-  get scale() { return this.transform.a }
-  set scale(n: number) {
-    this.transform.a = n
-    this.transform.d = n
+  get rotation() { return this._rotation }
+  set rotation(n: number) { this._rotation = n; this._transform = null }
+
+  get scale() { return this._scale }
+  set scale(n: number) { this._scale = n; this._transform = null }
+
+  get transform() {
+    return this._transform ??= Matrix.fromTransform(
+      this._x,
+      this._y,
+      this._rotation,
+      this._scale,
+    )
   }
 
   get events() { return this._events ??= createEvents() }
 
+  hasTransform() {
+    return this._x !== 0 || this._y !== 0 || this._rotation !== 0 || this._scale !== 1
+  }
+
   needsContext() {
-    return !this.transform.isIdentity() || this.alpha !== 1 || this.mask !== null
+    return this._x !== 0 || this._y !== 0 || this._rotation !== 0 || this._scale !== 1 || this.alpha !== 1 || this.mask !== null
   }
 
   on<T extends EventName>(event: T, callback: Events[T]) {

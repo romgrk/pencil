@@ -12,7 +12,7 @@ class CustomGraph extends Graph {
 
     this.root.add(
       new Container([
-        new Node(new Circle(100, 100, 10), Style.from({ fillStyle: 'red' }))
+        new Node(new Circle(100, 100, 10), Style.from({ fill: 'red' }))
       ])
     )
 

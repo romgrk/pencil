@@ -1,4 +1,4 @@
-import { Arc, Circle, Bezier, Quadratic, Box, Path, Point, Segment, Shape, ShapeTag } from '2d-geometry'
+import { Arc, Circle, Bezier, Quadratic, Box, Path, Point, Polygon, Segment, Shape, ShapeTag } from '2d-geometry'
 import type { Container } from './Container'
 import type { Graph } from './Graph'
 import { PIXEL_RATIO } from './constants'
@@ -12,7 +12,6 @@ export class Pencil {
   lastStyle: Style
   lastTextStyleId: number
   lastTextStyle: TextStyle
-  isMasking: boolean
 
   constructor(graph: Graph) {
     this.graph = graph
@@ -21,7 +20,6 @@ export class Pencil {
     this.lastStyle = Style.EMPTY
     this.lastTextStyleId = -1
     this.lastTextStyle = TextStyle.EMPTY
-    this.isMasking = false
   }
 
   setup() {
@@ -46,8 +44,8 @@ export class Pencil {
     this.lastStyleId = s.id
     this.lastStyle = s
     this.ctx.lineWidth = s.options.lineWidth
-    s.strokeStyle(this.ctx)
-    s.fillStyle(this.ctx)
+    s.stroke(this.ctx)
+    s.fill(this.ctx)
   }
 
   textStyle(s: TextStyle) {
@@ -65,15 +63,9 @@ export class Pencil {
   prepare(container: Container) {
     this.save()
 
-    if (!container.transform.isIdentity()) {
-      this.ctx.transform(
-        container.transform.a,
-        container.transform.b,
-        container.transform.c,
-        container.transform.d,
-        container.transform.tx,
-        container.transform.ty,
-      )
+    if (container.hasTransform()) {
+      const t = container.transform
+      this.ctx.transform(t.a, t.b, t.c, t.d, t.tx, t.ty)
     }
 
     if (container.mask) {
@@ -85,72 +77,71 @@ export class Pencil {
     }
   }
 
-  mask(mask: Container) {
-    this.isMasking = true
-    mask.render(this.graph)
-    this.isMasking = false
-    this.ctx.clip()
+  mask(mask: Shape) {
+    this.ctx.clip(this.trace(mask))
   }
 
   draw(s: Shape) {
-    if (this.isMasking) {
-      this.ctx.beginPath()
-      this.trace(s)
-      this.ctx.closePath()
-      return
+    const path = this.trace(s)
+    if (this.lastStyle.options.fill) {
+      this.ctx.fill(path, 'evenodd')
     }
-    if (this.lastStyle.options.fillStyle) {
-      this.ctx.beginPath()
+    if (this.lastStyle.options.stroke) {
       this.trace(s)
-      this.ctx.fill('evenodd')
-    }
-    if (this.lastStyle.options.strokeStyle) {
-      this.ctx.beginPath()
-      this.trace(s)
-      this.ctx.stroke()
+      this.ctx.stroke(path)
     }
   }
 
-  trace(shape: Shape) {
+  trace(shape: Shape): Path2D {
+    if (shape._data) {
+      return shape._data as Path2D
+    }
+    const p = new Path2D()
     switch (shape.tag) {
       case ShapeTag.Box: {
         const s = shape as Box
-        this.ctx.rect(s.xmin, s.ymin - s.height, s.width, s.height)
+        p.rect(s.xmin, s.ymin - s.height, s.width, s.height)
         break
       }
       case ShapeTag.Circle: {
         const s = shape as Circle
-        this.ctx.ellipse(s.center.x, s.center.y, s.r, s.r, 0, 0, Math.PI * 2)
+        p.ellipse(s.center.x, s.center.y, s.r, s.r, 0, 0, Math.PI * 2)
         break
       }
 
       case ShapeTag.Segment: {
         const s = shape as Segment
-        this.ctx.moveTo(s.start.x, s.start.y)
-        this.ctx.lineTo(s.end.x,   s.end.y)
+        p.moveTo(s.start.x, s.start.y)
+        p.lineTo(s.end.x,   s.end.y)
         break
       }
       case ShapeTag.Arc: {
         const s = shape as Arc
-        this.ctx.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
         break
       }
       case ShapeTag.Quadratic: {
         const s = shape as Quadratic
-        this.ctx.moveTo(s.start.x, s.start.y)
-        this.ctx.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
+        p.moveTo(s.start.x, s.start.y)
+        p.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
         break
       }
       case ShapeTag.Bezier: {
         const s = shape as Bezier
-        this.ctx.moveTo(s.start.x, s.start.y)
-        this.ctx.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
+        p.moveTo(s.start.x, s.start.y)
+        p.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
         break
       }
 
       case ShapeTag.Path: {
         const s = shape as Path
-        drawPath(this.ctx, s)
+        drawPath(p, s)
+        break
+      }
+
+      case ShapeTag.Polygon: {
+        const s = shape as Polygon
+        drawPath(p, s)
         break
       }
 
@@ -158,51 +149,39 @@ export class Pencil {
         throw new Error('unimplemented')
       }
     }
-  }
-
-  drawPoint(s: Point, r: number = 3) {
-    if (this.isMasking) {
-      this.ctx.beginPath()
-      return this.trace(s)
-    }
-    if (this.lastStyle.options.fillStyle) {
-      this.ctx.beginPath()
-      this.ctx.ellipse(s.x, s.y, r, r, 0, 0, Math.PI * 2)
-      this.ctx.fill()
-    }
-    if (this.lastStyle.options.strokeStyle) {
-      this.ctx.beginPath()
-      this.ctx.ellipse(s.x, s.y, r, r, 0, 0, Math.PI * 2)
-      this.ctx.stroke()
-    }
+    p.closePath()
+    shape._data = p
+    return p
   }
 
   drawText(value: string, position: Point) {
-    if (this.lastStyle.options.fillStyle) {
+    if (this.lastStyle.options.fill) {
       this.ctx.fillText(value, position.x, position.y)
     }
-    if (this.lastStyle.options.strokeStyle) {
+    if (this.lastStyle.options.stroke) {
       this.ctx.strokeText(value, position.x, position.y)
     }
   }
 }
 
-export function getNeedsContext(container: Container) {
-  return !container.transform.isIdentity() || container.alpha !== 1 || container.mask !== null
-}
+function drawPath(p: Path2D, shape: Polygon | Path) {
+  const parts = shape.parts
 
-function drawPath(ctx: CanvasRenderingContext2D, path: Path) {
-  const start = path.pointAtLength(0)
-  ctx.moveTo(start.x, start.y)
+  if (parts.length === 0) {
+    return
+  }
+
+  const start = parts[0].start
+  p.moveTo(start.x, start.y)
 
   let lastPoint = null
-  for (let i = 0; i < path.parts.length; i++) {
-    const shape = path.parts[i]
+  for (let i = 0; i < parts.length; i++) {
+    const shape = parts[i]
     const start = shape.start
 
     if (start !== lastPoint && lastPoint !== null && !start.equalTo(lastPoint)) {
-      ctx.closePath()
-      ctx.moveTo(start.x, start.y)
+      p.closePath()
+      p.moveTo(start.x, start.y)
     }
 
     lastPoint = shape.end
@@ -210,22 +189,22 @@ function drawPath(ctx: CanvasRenderingContext2D, path: Path) {
     switch (shape.tag) {
       case ShapeTag.Segment: {
         const s = shape as Segment
-        ctx.lineTo(s.end.x,   s.end.y)
+        p.lineTo(s.end.x,   s.end.y)
         break
       }
       case ShapeTag.Arc: {
         const s = shape as Arc
-        ctx.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
         break
       }
       case ShapeTag.Quadratic: {
         const s = shape as Quadratic
-        ctx.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
+        p.quadraticCurveTo(s.control1.x, s.control1.y, s.end.x, s.end.y)
         break
       }
       case ShapeTag.Bezier: {
         const s = shape as Bezier
-        ctx.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
+        p.bezierCurveTo(s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.end.x, s.end.y)
         break
       }
       default: {

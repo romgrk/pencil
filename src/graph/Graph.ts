@@ -32,6 +32,7 @@ export class Graph {
   layersByName: Record<string, Container>
 
   _eventManager: EventManager | null
+  _disposables: Function[]
 
   constructor(root: HTMLElement, options?: Options) {
     this.domNode = root
@@ -56,6 +57,7 @@ export class Graph {
     this.layersByName = {}
 
     this._eventManager = null
+    this._disposables = []
   }
 
   set cursor(value: string) {
@@ -84,8 +86,13 @@ export class Graph {
     })
   }
 
+  defer(fn: Function) {
+    this._disposables.push(fn)
+  }
+
   destroy() {
     this._eventManager?.destroy()
+    this._disposables.forEach(d => d())
   }
 
   render() {

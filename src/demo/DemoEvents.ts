@@ -15,7 +15,7 @@ export class DemoEvents extends Graph {
     this.root.add(content)
 
     const cursor = new Container([
-      new Node(new Circle(0, 0, 8), Style.from({ strokeStyle: '#e45050' }))
+      new Node(new Circle(0, 0, 8), Style.from({ stroke: '#e45050' }))
     ])
 
     const colors = [
@@ -29,7 +29,7 @@ export class DemoEvents extends Graph {
 
     const addBall = (color: string, x: number, y: number) => {
       const animation = new Animation()
-      const style = Style.from({ fillStyle: color })
+      const style = Style.from({ fill: color })
       const node = new Node(new Circle(0, 0, 10), style)
       const circle = new Container([node])
       circle.addTag('circle')
@@ -61,7 +61,7 @@ export class DemoEvents extends Graph {
         })
       })
       circle.on('pointerclick', () => {
-        node.style = Style.from({ fillStyle: colors[~~(Math.random() * colors.length)] })
+        node.style = Style.from({ fill: colors[~~(Math.random() * colors.length)] })
         this.render()
       })
       circle.on('dragmove', (_, __, offset) => {
@@ -78,7 +78,7 @@ export class DemoEvents extends Graph {
 
     {
       const animation = new Animation()
-      const style = Style.from({ fillStyle: colors[0] })
+      const style = Style.from({ fill: colors[0] })
       const circle = new Container([
         new Node(new Circle(0, 0, 50), style)
       ])
