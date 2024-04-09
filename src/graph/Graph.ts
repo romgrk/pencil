@@ -5,17 +5,13 @@ import { Node } from './Node'
 import { Pencil } from './Pencil'
 import { PIXEL_RATIO } from './constants'
 import { traverse } from'./traverse'
+import { requestRenderFrame, cancelRenderFrame } from './scheduler'
 
 const CONTENT = `<canvas />`
 
 export type Options = {
   width?: number,
   height?: number,
-}
-
-export type Mixin = {
-  enable(): void
-  disable(): void
 }
 
 export class Graph {
@@ -34,6 +30,7 @@ export class Graph {
   _eventManager: EventManager | null
   _validIndexes: boolean
   _disposables: Function[]
+  _renderFrameId: number
 
   constructor(root: HTMLElement, options?: Options) {
     this.domNode = root
@@ -60,6 +57,7 @@ export class Graph {
     this._eventManager = null
     this._validIndexes = false
     this._disposables = []
+    this._renderFrameId = 0
   }
 
   set cursor(value: string) {
@@ -97,9 +95,18 @@ export class Graph {
   destroy() {
     this._eventManager?.destroy()
     this._disposables.forEach(d => d())
+    cancelRenderFrame(this._renderFrameId)
   }
 
   render() {
+    if (this._renderFrameId === 0) {
+      this._renderFrameId = requestRenderFrame(this.renderFrame)
+    }
+  }
+
+  renderFrame = () => {
+    performance.mark('RENDER')
+    this._renderFrameId = 0
     this.pencil.setup()
     this.root.render(this)
     this._eventManager?.render()

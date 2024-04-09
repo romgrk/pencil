@@ -3,52 +3,22 @@ import { Container } from './Container'
 
 type Event = { offsetX: number, offsetY: number }
 
+const transforms = [] as Matrix[]
 export function positionAtObject(object: Container, event: Event) {
-  let current = object.parent as Container | null
+  let current = object as Container | null
 
-  let transforms = []
+  transforms.length = 0
   while (current) {
-    transforms.push(current.transform)
+    if (current.hasTransform())
+      transforms.push(current.transform)
     current = current.parent
   }
 
-  const t = new Matrix()
+  const p = new Point(event.offsetX, event.offsetY)
+
   for (let i = transforms.length - 1; i >= 0; i--) {
-    t.multiplyMut(transforms[i])
+    transforms[i].inverse.transformMut(p)
   }
 
-  return new Point(event.offsetX, event.offsetY).transform(t.invert())
-}
-
-export function positionAtObjectCached(
-  object: Container,
-  event: Event,
-  transformAtObject: Map<Container, Matrix>
-) {
-  let current = object.parent as Container | null
-
-  // [current, parent, ..., parent, root]
-  let nodes = []
-  let rootTransform = Matrix.IDENTITY
-
-  while (current) {
-    const foundRootTransform = transformAtObject.get(current)
-    if (foundRootTransform) {
-      rootTransform = foundRootTransform
-      break
-    }
-
-    nodes.push(current)
-
-    current = current.parent
-  }
-
-  let t = rootTransform
-  for (let i = nodes.length - 1; i >= 0; i--) {
-    const node = nodes[i]
-    transformAtObject.set(node, t)
-    t = t.multiply(node.transform)
-  }
-
-  return new Point(event.offsetX, event.offsetY).transform(t.invert())
+  return p
 }

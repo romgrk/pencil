@@ -197,7 +197,8 @@ export class LinearChart extends chart.Graph {
     this.root.add(new Container([cursor]))
 
     this.background.on('dragstart', () => {
-      this.root.queryAll('path').forEach((p: Container) => {
+      this.layersByName.path.alpha = 0.7
+      this.layersByName.points.children.forEach((p: Container) => {
         p.alpha = 0.7
       })
       this.render()
@@ -208,7 +209,8 @@ export class LinearChart extends chart.Graph {
       this.render()
     })
     this.background.on('dragend', () => {
-      this.root.queryAll('path').forEach((p: Container) => {
+      this.layersByName.path.alpha = 1
+      this.layersByName.points.children.forEach((p: Container) => {
         p.alpha = 1
       })
       this.render()

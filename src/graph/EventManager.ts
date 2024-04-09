@@ -1,7 +1,7 @@
-import { Point, Matrix, Vector } from '2d-geometry'
+import { Point, Vector } from '2d-geometry'
 import type { Graph } from './Graph'
 import type { Container } from './Container'
-import { positionAtObjectCached } from './position'
+import { positionAtObject } from './position'
 import { applyIndexes } from './traverse'
 
 export type Events = {
@@ -47,7 +47,6 @@ export type OtherEventName = keyof typeof OTHER_MASK
 
 export class EventManager {
   graph: Graph
-  transformCache: Map<Container, Matrix>
 
   moveNodes: Set<Container>
   moveNodesAsArray: Container[] | null
@@ -64,10 +63,10 @@ export class EventManager {
   dragNode: Container | null
   dragOrigin: Point
   dragPrevious: Point
+  dragOccurred: boolean
 
   constructor(graph: Graph) {
     this.graph = graph
-    this.transformCache = new Map()
 
     this.moveNodes = new Set()
     this.moveNodesAsArray = null
@@ -86,6 +85,7 @@ export class EventManager {
     this.dragNode = null
     this.dragOrigin = Point.EMPTY
     this.dragPrevious = Point.EMPTY
+    this.dragOccurred = false
 
     this.enable()
   }
@@ -179,9 +179,7 @@ export class EventManager {
     }
   }
 
-  render() {
-    this.transformCache = new Map()
-  }
+  render() {}
 
   onPointerMove = (event: PointerEvent) => {
     this.updateIndexes()
@@ -192,7 +190,7 @@ export class EventManager {
     for (let i = 0; i < moveNodes.length; i++) {
       const node = moveNodes[i]
       const listeners = node.events.listeners
-      const position = positionAtObjectCached(node, event, this.transformCache)
+      const position = positionAtObject(node, event)
 
       if (node.contains(position)) {
         if (!capturingNode || node.index > capturingNode.index) {
@@ -213,14 +211,14 @@ export class EventManager {
     }
 
     if (this.hoverNode && this.hoverNode !== capturingNode) {
-      const position = positionAtObjectCached(this.hoverNode, event, this.transformCache)
+      const position = positionAtObject(this.hoverNode, event)
       this.hoverNode.events.listeners.pointerout?.forEach(l => l(position, event))
       this.hoverNode = null
       this.graph.canvas.style.cursor = 'auto'
     }
 
     if (capturingNode && capturingNode !== this.hoverNode) {
-      const position = positionAtObjectCached(capturingNode, event, this.transformCache)
+      const position = positionAtObject(capturingNode, event)
       capturingNode.events.listeners.pointerover?.forEach(l => l(position, event))
       this.hoverNode = capturingNode
       this.graph.canvas.style.cursor = capturingNode.events.cursor
@@ -242,7 +240,7 @@ export class EventManager {
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      const position = positionAtObjectCached(node, event, this.transformCache)
+      const position = positionAtObject(node, event)
       if (node.contains(position)) {
         if (!capturingNode || node.index > capturingNode.index) {
           capturingNode = node
@@ -252,6 +250,7 @@ export class EventManager {
     }
 
     this.downNode = capturingNode
+    this.dragOccurred = false
 
     if (capturingNode) {
       const listeners = capturingNode.events.listeners
@@ -259,14 +258,12 @@ export class EventManager {
 
       // Drag start
       if (listeners.dragmove?.size) {
-        const position = positionAtObjectCached(capturingNode, event, this.transformCache)
+        const position = positionAtObject(capturingNode.parent!, event)
         this.dragNode = capturingNode
         this.dragOrigin = position
         this.dragPrevious = position
         this.startDrag()
         listeners.dragstart?.forEach(l => l(capturingNodePosition!))
-        // Avoid triggering click
-        this.downNode = null
       }
     }
   }
@@ -283,7 +280,7 @@ export class EventManager {
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      const position = positionAtObjectCached(node, event, this.transformCache)
+      const position = positionAtObject(node, event)
       if (node.contains(position)) {
         if (!capturingNode || node.index > capturingNode.index) {
           capturingNode = node
@@ -292,18 +289,18 @@ export class EventManager {
       }
     }
 
+    this.upNode = capturingNode
+
     if (capturingNode) {
       const listeners = capturingNode.events.listeners
       listeners.pointerup?.forEach(l => l(capturingNodePosition!, event))
-      if (capturingNode === this.downNode) {
-        listeners.pointerclick?.forEach(l => l(capturingNodePosition!, event))
-      }
+      this.onPointerClick(event)
     }
   }
 
   onPointerClick = (event: MouseEvent) => {
-    if (this.downNode && this.upNode && this.downNode === this.upNode) {
-      const position = positionAtObjectCached(this.upNode, event, this.transformCache)
+    if (this.downNode && this.upNode && this.downNode === this.upNode && !this.dragOccurred) {
+      const position = positionAtObject(this.upNode, event)
       this.upNode.events.listeners.pointerclick?.forEach(l => l(position, event))
     }
     this.downNode = null
@@ -317,15 +314,16 @@ export class EventManager {
   }
 
   onDragMove = (event: PointerEvent) => {
-    const current = positionAtObjectCached(this.dragNode!, event, this.transformCache)
+    const current = positionAtObject(this.dragNode!.parent!, event)
     const offset = new Vector(this.dragPrevious, current)
     const listeners = this.dragNode!.events.listeners
     listeners.dragmove?.forEach(l => l(this.dragOrigin, current, offset))
     this.dragPrevious = current
+    this.dragOccurred = true
   }
 
   onDragEnd = (event: PointerEvent) => {
-    const current = positionAtObjectCached(this.dragNode!, event, this.transformCache)
+    const current = positionAtObject(this.dragNode!.parent!, event)
     const offset = new Vector(this.dragPrevious, current)
     const listeners = this.dragNode!.events.listeners
     listeners.dragend?.forEach(l => l(this.dragOrigin, current, offset))
@@ -341,7 +339,7 @@ export class EventManager {
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
-      const position = positionAtObjectCached(node, event, this.transformCache)
+      const position = positionAtObject(node, event)
       if (node.contains(position)) {
         if (!capturingNode || node.index > capturingNode.index) {
           capturingNode = node

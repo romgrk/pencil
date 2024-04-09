@@ -1,4 +1,5 @@
 // import BezierEasing from 'bezier-easing'
+import { requestUpdateFrame, cancelUpdateFrame } from './scheduler'
 
 export type EasingFn = (t: number) => number
 
@@ -20,7 +21,7 @@ export type AnimateCallback = (value: number, done: boolean) => void
 export type AnimatePromise = Promise<void> & { cancel: Function }
 
 /**
- * Animate a value using `requestAnimationFrame()`. This function does not
+ * Animate a value using `requestUpdateFrame()`. This function does not
  * call `options.onChange` in the current event loop cycle. It is not guaranteed
  * to stop exactly after `options.duration`, but it does guarantee that it will
  * never call `options.onChange` with a value outside `options.to`.
@@ -37,19 +38,19 @@ export function animate(options: Options, onChange: AnimateCallback) {
     const elapsed = timestamp - start - delay
 
     if (elapsed < 0) {
-      id = requestAnimationFrame(step)
+      id = requestUpdateFrame(step)
     } else if (elapsed >= duration) {
       onChange(to, true)
       resolve()
     } else {
       onChange(lerp(easing(elapsed / duration), from, to), false)
-      id = requestAnimationFrame(step)
+      id = requestUpdateFrame(step)
     }
   }
 
-  promise.cancel = () => { cancelAnimationFrame(id) }
+  promise.cancel = () => { cancelUpdateFrame(id) }
 
-  id = requestAnimationFrame(step)
+  id = requestUpdateFrame(step)
 
   return promise
 }

@@ -1,6 +1,5 @@
 import { Point, Matrix, Shape } from '2d-geometry'
 import type { Graph } from './Graph'
-import { traverse } from './traverse'
 import type { EventName, Events, EventListeners } from './EventManager'
 
 export type EventMeta = {
@@ -56,7 +55,6 @@ export class Container {
     for (let i = 0; i < children.length; i++) {
       children[i].parent = this
     }
-
   }
 
   get x() { return this._x }
@@ -131,11 +129,8 @@ export class Container {
   }
 
   contains(point: Point) {
-    const currentPoint =
-      this.transform.isIdentity() ? point : point.transform(this.transform.invert())
-
     for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i].contains(currentPoint)) {
+      if (this.children[i].contains(point)) {
         return true
       }
     }

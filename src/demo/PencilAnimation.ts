@@ -1,4 +1,3 @@
-import { Matrix } from '2d-geometry'
 import { parsePath } from '2d-geometry/svg'
 import { Graph } from '../graph/Graph'
 import { Container } from '../graph/Container'
@@ -23,9 +22,9 @@ export class PencilAnimation extends Graph {
   constructor(domNode: any, options: any) {
     super(domNode, options)
 
-    const strokes = new Container([], Matrix.IDENTITY.translate(100, 89))
-    const filling = new Container([], Matrix.IDENTITY.translate(100, 89))
-    filling.alpha = 0
+    const strokes = new Container([], { x: 100, y: 89 })
+    const filling = new Container([], { x: 100, y: 89 })
+    filling.visible = false
 
     this.root.add(new Container([new elements.Grid()]))
     this.root.add(filling)
@@ -51,6 +50,8 @@ export class PencilAnimation extends Graph {
       return Promise.all(animations)
     })
     .then(() => {
+      filling.visible = true
+      filling.alpha = 0
       for (let i = 0; i < paths.length; i++) {
         filling.add(new Node(paths[i], Style.from({ fill: colors[i % colors.length] })))
       }

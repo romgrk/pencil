@@ -1,4 +1,4 @@
-import { Circle, Matrix } from '2d-geometry'
+import { Circle } from '2d-geometry'
 import { Graph } from '../graph/Graph'
 import { Container } from '../graph/Container'
 import { Node } from '../graph/Node'
@@ -11,7 +11,7 @@ export class DemoEvents extends Graph {
     super(domNode, options)
 
     this.root.add(new Container([new elements.Grid()]))
-    const content = new Container([], Matrix.IDENTITY)
+    const content = new Container([])
     this.root.add(content)
 
     const cursor = new Container([
@@ -32,7 +32,6 @@ export class DemoEvents extends Graph {
       const style = Style.from({ fill: color })
       const node = new Node(new Circle(0, 0, 10), style)
       const circle = new Container([node])
-      circle.addTag('circle')
       circle.x = x
       circle.y = y
       circle.events.cursor = 'pointer'
@@ -82,7 +81,6 @@ export class DemoEvents extends Graph {
       const circle = new Container([
         new Node(new Circle(0, 0, 50), style)
       ])
-      circle.addTag('circle')
       circle.x = 300
       circle.y = 300
       circle.events.cursor = 'pointer'
@@ -113,7 +111,7 @@ export class DemoEvents extends Graph {
       content.add(circle)
     }
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 3000; i++) {
       const x = Math.round(Math.random() * this.width)
       const y = Math.round(Math.random() * this.height)
       const color = colors[~~(Math.random() * colors.length)]
