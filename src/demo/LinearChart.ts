@@ -101,7 +101,6 @@ class PathNode extends Node {
   constructor(chart: LinearChart, dataset: Dataset) {
     super()
 
-    this.addTag('path')
     this.shape = PathNode.buildPath(chart, dataset)
     this.style = PathNode.style
     this.fullShape = this.shape as Path
@@ -167,7 +166,7 @@ export class LinearChart extends chart.Graph {
 
     this.layersByName.container = new Container(
       [],
-      Matrix.IDENTITY.translate(this.content.xmin, this.content.ymin)
+      { x: this.content.xmin, y: this.content.ymin }
     )
     this.layersByName.content = new Container([])
 
@@ -181,7 +180,6 @@ export class LinearChart extends chart.Graph {
       pathAreaNode,
     ])
     this.layersByName.points = new Container([])
-    this.layersByName.points.addTag('path')
     this.layersByName.xLabels = new Container([])
 
     this.layersByName.content.add(this.layersByName.path)
@@ -206,7 +204,7 @@ export class LinearChart extends chart.Graph {
     })
     this.background.on('dragmove', (_, __, { x: dx }) => {
       const content = this.layersByName.content
-      content.transform = content.transform.translate(dx, 0)
+      content.x += dx
       this.render()
     })
     this.background.on('dragend', () => {
@@ -226,10 +224,7 @@ export class LinearChart extends chart.Graph {
     })
     const onScrollHorizontal = (event: WheelEvent) => {
       const content = this.layersByName.content
-      content.transform = content.transform.translate(
-        event.deltaX / PIXEL_RATIO,
-        0
-      )
+      content.x += event.deltaX / PIXEL_RATIO
       this.render()
     }
     const onScrollVertical = (event: WheelEvent) => {
@@ -283,7 +278,7 @@ export class LinearChart extends chart.Graph {
 
     // Setup
 
-    pathNode.shape = Path.EMPTY
+    pathNode.shape = new Path([])
     pathAreaNode.alpha = 0
     this.populateDataset(0, 0)
     this.render()
@@ -338,7 +333,6 @@ export class LinearChart extends chart.Graph {
           new Circle(0, 0, r), Style.from({ fill: colors.pointFill })
         )
       ])
-      point.addTag('point')
       point.x = x
       point.y = y
 

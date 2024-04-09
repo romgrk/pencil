@@ -10,12 +10,13 @@ export type EventMeta = {
 }
 const createEvents = () => ({ moveFlag: 0, cursor: 'auto', listeners: {} }) as EventMeta
 
+type Options = { x?: number, y?: number, rotation?: number, scale?: number }
+
 export class Container {
   index: number
   graph: Graph | null
   parent: Container | null
   children: Container[]
-  tags: Set<string> | null // FIXME: integers?
 
   visible: boolean
   mask: Shape | null
@@ -29,12 +30,11 @@ export class Container {
 
   _events: EventMeta | null
 
-  constructor(children: Container[] = []) {
+  constructor(children: Container[] = [], options?: Options) {
     this.index = -1
     this.graph = null
     this.parent = null
     this.children = children
-    this.tags = null
 
     this.visible = true
     this.mask = null
@@ -42,13 +42,13 @@ export class Container {
     this.alpha = 1
 
     this._x = NaN
-    this._x = 0
+    this._x = options?.x ?? 0
     this._y = NaN
-    this._y = 0
+    this._y = options?.y ?? 0
     this._rotation = NaN
-    this._rotation = 0
+    this._rotation = options?.rotation ?? 0
     this._scale = NaN
-    this._scale = 1
+    this._scale = options?.scale ?? 1
     this._transform = null
 
     this._events = null
@@ -140,34 +140,6 @@ export class Container {
       }
     }
     return false
-  }
-
-  addTag(tag: string) {
-    this.tags ??= new Set()
-    this.tags.add(tag)
-  }
-
-  query(tag: string): Container | null {
-    try {
-      traverse(this, child => {
-        if (child.tags && child.tags.has(tag)) {
-          throw child
-        }
-      })
-    } catch (result: any) {
-      return result
-    }
-    return null
-  }
-
-  queryAll(tag: string) {
-    const result = [] as Container[]
-    traverse(this, child => {
-      if (child.tags && child.tags.has(tag)) {
-        result.push(child)
-      }
-    })
-    return result
   }
 
   render(graph: Graph) {
