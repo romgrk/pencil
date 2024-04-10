@@ -29,19 +29,19 @@ const newGraph = new CustomGraph(document.querySelector('canvas'))
 
 This library is a thin visualization layer on top of [2d-geometry](https://github.com/romgrk/2d-geometry), which provides powerful mathematical primitives. It's canvas-only (no SVG), so it can stay performant, small & simple. The API is inspired & copied from PixiJS when possible.
 
-## Why not..
+## Why not…
 
-### SVG?
+### …SVG?
 
 It's great if you can use it, but it performs less well than canvas. If you have graphs with lots of elements, or many small graphs, the UX is going to feel sluggish.
 
-### PixiJS?
+### …PixiJS?
 
 It's a gamedev library so the size is huge. WebGL/WebGPU is nice if you need it, but it's also a limitation as browsers only allow a limited number of WebGx contexts in a page (e.g. 16 in chrome).
 
-### Konva or Two.js?
+### …Konva or Two.js?
 
-I have replicated the [stress test](https://konvajs.org/docs/sandbox/Animation_Stress_Test.html) and Pencil is substantially faster than both. Specializing Pencil for canvas 2dcontext means it can be optimized more easily.
+I have replicated the [animation stress test from Konva](https://konvajs.org/docs/sandbox/Animation_Stress_Test.html) and Pencil is substantially faster than both. Specializing Pencil for canvas `2d` context means it can be optimized more easily.
 
 | Konva | Two.js | Pencil |
 | --- | --- | --- |
