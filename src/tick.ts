@@ -1,3 +1,5 @@
+import { cancelUpdateFrame, requestUpdateFrame } from './scheduler'
+
 export type Callback = (t: number, dt: number) => void
 export type TickResult = ReturnType<typeof tick>
 
@@ -12,7 +14,7 @@ export function tick(onChange: Callback = noop) {
   let callback = onChange
 
   const step = (timestamp: number) => {
-    id = requestAnimationFrame(step)
+    id = requestUpdateFrame(step)
     callback(timestamp, timestamp - last)
     last = timestamp
   }
@@ -21,9 +23,9 @@ export function tick(onChange: Callback = noop) {
     if (onChange) {
       callback = onChange
     }
-    id = requestAnimationFrame(step)
+    id = requestUpdateFrame(step)
   }
-  const stop = () => { cancelAnimationFrame(id) }
+  const stop = () => { cancelUpdateFrame(id) }
 
   return { start, stop }
 }
