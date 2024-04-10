@@ -1,5 +1,7 @@
 # Pencil
 
+[Live examples](https://pencil-docs.netlify.app/)
+
 A canvas 2D drawing library, optimized for performance, bundle size and simplicity.
 
 ```typescript
@@ -27,9 +29,23 @@ const newGraph = new CustomGraph(document.querySelector('canvas'))
 
 This library is a thin visualization layer on top of [2d-geometry](https://github.com/romgrk/2d-geometry), which provides powerful mathematical primitives. `Node` elements are one mathematical primitive with one `Style`, grouped under `Container` elements. The API is inspired & copied from PixiJS when possible.
 
-## Examples
+## Why not..
 
-[Live examples](https://pencil-docs.netlify.app/examples)
+### SVG?
+
+It's great if you can use it, but it performs less well than canvas. If you have graphs with lots of elements, or many small graphs, the UX is going to feel sluggish.
+
+### PixiJS?
+
+It's a gamedev library so the size is huge. WebGL/WebGPU is nice if you need it, but it's also a limitation as browsers only allow a limited number of WebGx contexts in a page (e.g. 16 in chrome).
+
+### Konva or Two.js?
+
+I have replicated the [stress test](https://konvajs.org/docs/sandbox/Animation_Stress_Test.html) and Pencil is substantially faster than both. Specializing Pencil for canvas 2dcontext means it can be optimized more easily.
+
+| Konva | Two.js | Pencil |
+| --- | --- | --- |
+| ![test-konva](https://github.com/romgrk/pencil/assets/1423607/edc8f3aa-c76e-4dfe-be77-8e9a8ad6357f) | ![test-two](https://github.com/romgrk/pencil/assets/1423607/052eec9b-4e1a-4425-ae9d-92a2d87b7c0a) | ![test-pencil](https://github.com/romgrk/pencil/assets/1423607/32152afa-68cd-48d4-b132-b1252c4ca478) |
 
 ## License
 
