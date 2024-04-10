@@ -92,8 +92,9 @@ export class PathEditor extends Graph {
       const tb = b.slope > a.slope ? b.slope - TAU : b.slope
       const dt = ta - tb
       const v = new Vector(ta - dt / 2)
-      const pa = part.end.translate(v.rotate90CCW().multiply(part.length / 4))
-      const pb = part.end.translate(v.rotate90CW().multiply(next.length / 4))
+      const length = Math.min(part.length / 4, next.length / 4)
+      const pa = part.end.translate(v.rotate90CCW().multiply(length))
+      const pb = part.end.translate(v.rotate90CW().multiply(length))
       part.control2 = pa
       next.control1 = pb
     }
@@ -130,7 +131,7 @@ export class PathEditor extends Graph {
       buttonToggle,
     ])
     tools.x = 10
-    tools.y = 10
+    tools.y = 200
 
     this.root.add(tools)
   }

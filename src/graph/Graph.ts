@@ -105,7 +105,6 @@ export class Graph {
   }
 
   renderFrame = () => {
-    performance.mark('RENDER')
     this._renderFrameId = 0
     this.pencil.setup()
     this.root.render(this)
