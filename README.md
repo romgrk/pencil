@@ -27,7 +27,7 @@ const newGraph = new CustomGraph(document.querySelector('canvas'))
 
 ## Design
 
-This library is a thin visualization layer on top of [2d-geometry](https://github.com/romgrk/2d-geometry), which provides powerful mathematical primitives. `Node` elements are one mathematical primitive with one `Style`, grouped under `Container` elements. The API is inspired & copied from PixiJS when possible.
+This library is a thin visualization layer on top of [2d-geometry](https://github.com/romgrk/2d-geometry), which provides powerful mathematical primitives. It's canvas-only (no SVG), so it can stay performant, small & simple. The API is inspired & copied from PixiJS when possible.
 
 ## Why not..
 
