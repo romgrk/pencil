@@ -19,7 +19,7 @@
       "pencil": ["../dist/"],
       "pencil/*": ["../dist/*"],
       "2d-geometry": ["../node_modules/2d-geometry/dist/"],
-      "2d-geometry/svg": ["../node_modules/2d-geometry/dist/svg/index.js"]
+      "2d-geometry/svg": ["../node_modules/2d-geometry/dist/svg"]
     },
 
     /* Linting */
