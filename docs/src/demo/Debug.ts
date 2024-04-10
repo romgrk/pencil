@@ -1,4 +1,4 @@
-import { point, Arc, Circle, Quadratic, TAU } from '2d-geometry'
+// import { point, Arc, Circle, Quadratic, TAU } from '2d-geometry'
 import { Graph, Container } from 'pencil'
 import * as elements from 'pencil/elements'
 

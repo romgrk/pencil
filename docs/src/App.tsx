@@ -1,10 +1,10 @@
 import { GraphContainer } from 'pencil'
-import { Debug } from './demo/Debug'
-import { PencilAnimation } from './demo/PencilAnimation'
-import { LinearChart } from './demo/LinearChart'
+// import { Debug } from './demo/Debug'
+// import { PencilAnimation } from './demo/PencilAnimation'
+// import { LinearChart } from './demo/LinearChart'
 import { Dataset } from './Dataset'
-import { DemoEvents } from './demo/DemoEvents'
-import DemoStressTestKonva from './demo/DemoStressTestKonva'
+// import { DemoEvents } from './demo/DemoEvents'
+// import DemoStressTestKonva from './demo/DemoStressTestKonva'
 import { PathEditor } from './demo/PathEditor'
 import data from './node-gtk-downloads.json'
 
@@ -35,6 +35,7 @@ const dataset = new Dataset(
     xLabel: (e) => e.day
   }
 )
+console.log(dataset)
 
 function App() {
   return (

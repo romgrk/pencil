@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "concurrently npm:root:start npm:docs:start",
+    "build": "pnpm run root:build && pnpm run docs:build",
     "root:start": "tsc --watch",
     "root:build": "tsc",
     "docs:start": "cd docs && pnpm run start",
