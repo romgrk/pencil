@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   2d-geometry:
-    specifier: 3.0.0-rc.1
-    version: 3.0.0-rc.1
+    specifier: 3.0.0-rc.2
+    version: 3.0.0-rc.2
   concurrently:
     specifier: ^8.2.2
     version: 8.2.2
@@ -55,8 +55,8 @@ devDependencies:
 
 packages:
 
-  /2d-geometry@3.0.0-rc.1:
-    resolution: {integrity: sha512-lXqMyBGMIpafw5b0A5ZCJAZ4oiIDdoUgVB6AZij+HArl1cXQ8HReM19RACz1ZKIQ6Si6sAZi6yDx2PRTUTY/Pg==}
+  /2d-geometry@3.0.0-rc.2:
+    resolution: {integrity: sha512-M9zZUfMmaenkBDTtcAMcJEInDQjCqJG7bO2fDdVUZobWDxcxiH81ztysIwQt5qsk4tgc+9WRT1G/TdeQgNZoWw==}
     engines: {node: '>=4.2.4'}
     dev: false
 
