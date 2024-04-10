@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   2d-geometry:
-    specifier: ^2.0.0
-    version: link:../2d-geometry
+    specifier: 3.0.0-rc.1
+    version: 3.0.0-rc.1
   concurrently:
     specifier: ^8.2.2
     version: 8.2.2
@@ -54,6 +54,11 @@ devDependencies:
     version: 5.2.7
 
 packages:
+
+  /2d-geometry@3.0.0-rc.1:
+    resolution: {integrity: sha512-lXqMyBGMIpafw5b0A5ZCJAZ4oiIDdoUgVB6AZij+HArl1cXQ8HReM19RACz1ZKIQ6Si6sAZi6yDx2PRTUTY/Pg==}
+    engines: {node: '>=4.2.4'}
+    dev: false
 
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
