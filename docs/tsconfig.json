@@ -17,7 +17,9 @@
 
     "paths": {
       "pencil": ["../dist/"],
-      "pencil/*": ["../dist/*"]
+      "pencil/*": ["../dist/*"],
+      "2d-geometry": ["../node_modules/2d-geometry/dist/"],
+      "2d-geometry/*": ["../node_modules/2d-geometry/dist/*"]
     },
 
     /* Linting */
