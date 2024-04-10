@@ -45,7 +45,7 @@ I have replicated the [stress test](https://konvajs.org/docs/sandbox/Animation_S
 
 | Konva | Two.js | Pencil |
 | --- | --- | --- |
-| ![test-konva](https://github.com/romgrk/pencil/assets/1423607/edc8f3aa-c76e-4dfe-be77-8e9a8ad6357f) | ![test-two](https://github.com/romgrk/pencil/assets/1423607/052eec9b-4e1a-4425-ae9d-92a2d87b7c0a) | ![test-pencil](https://github.com/romgrk/pencil/assets/1423607/32152afa-68cd-48d4-b132-b1252c4ca478) |
+| ![test-konva](https://github.com/romgrk/pencil/assets/1423607/edc8f3aa-c76e-4dfe-be77-8e9a8ad6357f) | ![test-two](https://github.com/romgrk/pencil/assets/1423607/f7f9ed96-53f0-46bf-8b5d-2b974905334b) | ![test-pencil](https://github.com/romgrk/pencil/assets/1423607/32152afa-68cd-48d4-b132-b1252c4ca478) |
 
 ## License
 
