@@ -2,11 +2,11 @@ import { GraphContainer } from 'pencil'
 // import { Debug } from './demo/Debug'
 // import { PencilAnimation } from './demo/PencilAnimation'
 // import { LinearChart } from './demo/LinearChart'
-import { Dataset } from './Dataset'
+import { Dataset } from '../Dataset'
 // import { DemoEvents } from './demo/DemoEvents'
 // import DemoStressTestKonva from './demo/DemoStressTestKonva'
-import { PathEditor } from './demo/PathEditor'
-import data from './node-gtk-downloads.json'
+import { PathEditor } from '../demo/PathEditor'
+import data from '../node-gtk-downloads.json'
 
 const byWeek = data.reduce((result, item, index) => { 
   const chunkIndex = Math.floor(index / 7)
@@ -35,9 +35,8 @@ const dataset = new Dataset(
     xLabel: (e) => e.day
   }
 )
-console.log(dataset)
 
-function App() {
+export default function Index() {
   return (
     <div className='App'>
       {
@@ -86,5 +85,3 @@ function App() {
     </div>
   )
 }
-
-export default App

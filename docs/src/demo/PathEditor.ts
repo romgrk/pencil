@@ -118,20 +118,17 @@ export class PathEditor extends Graph {
   }
 
   buildUI() {
-    const buttonDraw = Button(this, { label: 'Draw' })
-    buttonDraw.y = 0
     const buttonSmooth = Button(this, { label: 'Smooth', onClick: this.smoothPath })
-    buttonSmooth.y = 45
+    buttonSmooth.y = 0
     const buttonToggle = Button(this, { label: 'Toggle', onClick: this.toggleControls })
-    buttonToggle.y = 90
+    buttonToggle.y = 45
 
     const tools = new Container([
-      buttonDraw,
       buttonSmooth,
       buttonToggle,
     ])
     tools.x = 10
-    tools.y = 200
+    tools.y = 10
 
     this.root.add(tools)
   }

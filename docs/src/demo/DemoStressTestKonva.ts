@@ -1,4 +1,4 @@
-import { Polygon, TAU } from '2d-geometry'
+import { Rect, TAU } from '2d-geometry'
 import { Graph, Container, Node, Style, tick } from 'pencil'
 import * as elements from 'pencil/elements'
 
@@ -30,14 +30,9 @@ export default class Demo extends Graph {
       const x = Math.random() * this.width - 20
       const y = Math.random() * this.height - 20
 
-      let polygon = new Polygon([
-        [0, 0],
-        [width, 0],
-        [width, height],
-        [0, height]
-      ])
-      polygon = polygon.translate(-polygon.box.width / 2, -polygon.box.height / 2)
-      const box = new Node(polygon, Style.from({ lineWidth: 4, stroke: '#000000', fill: color }))
+      let shape = new Rect(0, 0, width, height)
+      shape = shape.translate(-shape.box.width / 2, -shape.box.height / 2)
+      const box = new Node(shape, Style.from({ lineWidth: 4, stroke: '#000000', fill: color }))
       box.x = x
       box.y = y
 
@@ -55,7 +50,6 @@ export default class Demo extends Graph {
     })
     t.start()
     this.defer(t.stop)
-    // setTimeout(() => t.cancel(), 2000)
 
 
     this.root.add(new Container([new elements.Grid()]))
