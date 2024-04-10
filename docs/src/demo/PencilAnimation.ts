@@ -1,5 +1,5 @@
-import { parsePath } from '2d-geometry/svg'
 import { Graph, Container, Node, Style, animate } from 'pencil'
+import { parsePath } from '2d-geometry/svg'
 import * as elements from 'pencil/elements'
 import * as PENCIL from './pencil.path'
 
