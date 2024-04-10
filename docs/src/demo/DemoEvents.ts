@@ -107,7 +107,7 @@ export class DemoEvents extends Graph {
       content.add(circle)
     }
 
-    for (let i = 0; i < 3000; i++) {
+    for (let i = 0; i < 1000; i++) {
       const x = Math.round(Math.random() * this.width)
       const y = Math.round(Math.random() * this.height)
       const color = colors[~~(Math.random() * colors.length)]

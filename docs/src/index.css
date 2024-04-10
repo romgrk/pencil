@@ -24,3 +24,8 @@ body {
   margin: 0;
   padding: 2rem;
 }
+
+.Page {
+  width: 100%;
+  max-width: 850px;
+}

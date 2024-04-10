@@ -1,4 +1,5 @@
 import { Tabs } from '@mantine/core'
+import { Link } from 'react-router-dom'
 import { GraphContainer } from 'pencil'
 // import { Debug } from './demo/Debug'
 import { PencilAnimation } from '../demo/PencilAnimation'
@@ -41,54 +42,82 @@ const tabs = [
   {
     name: 'linear-chart',
     content:
-      <GraphContainer<typeof LinearChart>
-        type={LinearChart}
-        width={800}
-        height={500}
-        dataset={dataset}
-      />
+      <>
+        <p>
+          Simple interactive linear chart.
+        </p>
+        <GraphContainer<typeof LinearChart>
+          type={LinearChart}
+          width={800}
+          height={500}
+          dataset={dataset}
+        />
+      </>
   },
   {
     name: 'path-editor',
     content:
-      <GraphContainer
-        type={PathEditor}
-        width={800}
-        height={500}
-      />
+      <>
+        <p>
+        Building an interactive path editor app.
+        </p>
+        <GraphContainer
+          type={PathEditor}
+          width={800}
+          height={500}
+        />
+      </>
   },
   {
     name: 'demo-events',
     content:
-      <GraphContainer
-        type={DemoEvents}
-        width={800}
-        height={500}
-      />
+      <>
+        <p>
+          This demo shows event handling. Each small circle has events for pointerover, pointerout,
+          pointerup, pointerdown, pointerclick and drag. The big circle has pointerend and pointerleave events.
+        </p>
+        <GraphContainer
+          type={DemoEvents}
+          width={800}
+          height={500}
+        />
+      </>
   },
   {
     name: 'demo-stress-test',
     content:
-      <GraphContainer
-        type={DemoStressTestKonva}
-        width={615}
-        height={300}
-      />
+      <>
+        <p>
+          Replication of the <a href='https://konvajs.org/docs/sandbox/Animation_Stress_Test.html'>Konva animation stress test</a>.
+        </p>
+        <GraphContainer
+          type={DemoStressTestKonva}
+          width={615}
+          height={300}
+        />
+      </>
   },
   {
     name: 'pencil',
     content:
-      <GraphContainer
-        type={PencilAnimation}
-        width={700}
-        height={300}
-      />
+      <>
+        <p>
+          Animating a path.
+        </p>
+        <GraphContainer
+          type={PencilAnimation}
+          width={700}
+          height={300}
+        />
+      </>
   },
 ]
 
 export default function Demo() {
   return (
-    <div className='App'>
+    <div className='Page'>
+      <Link to='/'>Home</Link>
+
       <Tabs defaultValue={tabs[0].name} keepMounted={false}>
         <Tabs.List>
           {tabs.map(tab =>
@@ -99,7 +128,7 @@ export default function Demo() {
         </Tabs.List>
         {tabs.map(tab =>
           <Tabs.Panel key={tab.name} value={tab.name}>
-            <div style={{ padding: '2rem 0' }}>
+            <div>
               {tab.content}
             </div>
           </Tabs.Panel>
