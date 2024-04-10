@@ -1,6 +1,6 @@
 import { TAU, Circle, RoundedRect, Point, Path, Segment, Bezier, Vector } from '2d-geometry'
-import { Graph, Container, Node, Style, Text, TextStyle } from '../graph'
-import * as elements from '../graph/elements'
+import { Graph, Container, Node, Style, Text, TextStyle } from 'pencil'
+import * as elements from 'pencil/elements'
 
 const pathStyle = Style.from({ stroke: '#e45050' })
 

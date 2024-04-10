@@ -1,10 +1,6 @@
 import { parsePath } from '2d-geometry/svg'
-import { Graph } from '../graph/Graph'
-import { Container } from '../graph/Container'
-import { Node } from '../graph/Node'
-import { Style } from '../graph/Style'
-import { animate } from '../graph/animate'
-import * as elements from '../graph/elements'
+import { Graph, Container, Node, Style, animate } from 'pencil'
+import * as elements from 'pencil/elements'
 import * as PENCIL from './pencil.path'
 
 const colors = [

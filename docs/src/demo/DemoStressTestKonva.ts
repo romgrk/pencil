@@ -1,10 +1,6 @@
 import { Polygon, TAU } from '2d-geometry'
-import { Graph } from '../graph/Graph'
-import { Container } from '../graph/Container'
-import { Node } from '../graph/Node'
-import { Style } from '../graph/Style'
-import { tick } from '../graph/tick'
-import * as elements from '../graph/elements'
+import { Graph, Container, Node, Style, tick } from 'pencil'
+import * as elements from 'pencil/elements'
 
 export default class Demo extends Graph {
   constructor(domNode: any, options: any) {

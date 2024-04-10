@@ -1,10 +1,6 @@
 import { point, Arc, Circle, Quadratic, TAU } from '2d-geometry'
-import { Graph } from '../graph/Graph'
-import { Container } from '../graph/Container'
-import { Node } from '../graph/Node'
-import { Style } from '../graph/Style'
-import { animate, Animation } from '../graph/animate'
-import * as elements from '../graph/elements'
+import { Graph, Container } from 'pencil'
+import * as elements from 'pencil/elements'
 
 
 export class Debug extends Graph {

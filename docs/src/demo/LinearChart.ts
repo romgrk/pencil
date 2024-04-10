@@ -1,19 +1,23 @@
-import { Bezier, Box, Path, Matrix, Point, Segment, Circle, lerp } from '2d-geometry'
-import { Node, Text } from '../graph/Node'
-import { Dataset } from '../graph/Dataset'
-import { Container } from '../graph/Container'
-import { Style } from '../graph/Style'
-import { TextStyle } from '../graph/TextStyle'
-import { linearScale, LinearScale } from '../graph/linearScale'
-import { animate, Easing } from '../graph/animate'
-import { positionAtObject } from '../graph/position'
-import * as Interval from '../graph/interval'
-import { PIXEL_RATIO } from '../graph/constants'
-import * as elements from '../graph/elements'
-import * as chart from '../graph/Graph'
-import { Graph } from '../graph/Graph'
+import { Bezier, Box, Path, Point, Segment, Circle, lerp } from '2d-geometry'
+import {
+  Node,
+  Text,
+  Container,
+  Style,
+  TextStyle,
+  linearScale,
+  LinearScale,
+  animate,
+  Easing,
+  positionAtObject,
+  PIXEL_RATIO,
+} from 'pencil'
+import { Graph, Options as GraphOptions } from 'pencil/Graph'
+import * as elements from 'pencil/elements'
+import * as Interval from '../interval'
+import { Dataset } from '../Dataset'
 
-export type Options = chart.Options & {
+export type Options = GraphOptions & {
   dataset: Dataset<any>,
 }
 
@@ -40,22 +44,22 @@ class AxisLines extends Node {
 
   factor: number = 1
 
-  render(chart: Graph) {
-    const { pencil } = chart
+  render(graph: Graph) {
+    const { pencil } = graph
 
-    const origin = new Point(PADDING, chart.height - PADDING)
+    const origin = new Point(PADDING, graph.height - PADDING)
 
     pencil.style(AxisLines.style)
     pencil.draw(
       new Segment(
         origin,
-        origin.translate(0, this.factor * -(chart.height - 2 * PADDING)),
+        origin.translate(0, this.factor * -(graph.height - 2 * PADDING)),
       )
     )
     pencil.draw(
       new Segment(
         origin,
-        origin.translate(this.factor * (chart.width - 2 * PADDING), 0),
+        origin.translate(this.factor * (graph.width - 2 * PADDING), 0),
       )
     )
   }
@@ -67,11 +71,11 @@ class PathNode extends Node {
     stroke: colors.pathStroke
   })
 
-  static buildPath(chart: LinearChart, dataset: Dataset) {
+  static buildPath(graph: LinearChart, dataset: Dataset) {
     // See https://proandroiddev.com/drawing-bezier-curve-like-in-google-material-rally-e2b38053038c
     const points = dataset.entries.map(entry => [
-      chart.scale.x(dataset.xGet(entry)),
-      chart.scale.y(dataset.yGet(entry)),
+      graph.scale.x(dataset.xGet(entry)),
+      graph.scale.y(dataset.yGet(entry)),
     ])
     const controlPoints1 = [] as [number, number][]
     const controlPoints2 = [] as [number, number][]
@@ -98,37 +102,37 @@ class PathNode extends Node {
 
   fullShape: Path
 
-  constructor(chart: LinearChart, dataset: Dataset) {
+  constructor(graph: LinearChart, dataset: Dataset) {
     super()
 
-    this.shape = PathNode.buildPath(chart, dataset)
+    this.shape = PathNode.buildPath(graph, dataset)
     this.style = PathNode.style
     this.fullShape = this.shape as Path
   }
 }
 
 class PathAreaNode extends Node {
-  constructor(chart: LinearChart, dataset: Dataset) {
+  constructor(graph: LinearChart, dataset: Dataset) {
     super()
 
-    const path = PathNode.buildPath(chart, dataset)
+    const path = PathNode.buildPath(graph, dataset)
     path.parts.unshift(new Segment(
-      new Point(path.parts[0].start.x, chart.content.height),
+      new Point(path.parts[0].start.x, graph.content.height),
       path.parts[0].start,
     ))
     path.parts.push(new Segment(
       path.parts[path.parts.length - 1].end,
-      new Point(path.parts[path.parts.length - 1].end.x, chart.content.height),
+      new Point(path.parts[path.parts.length - 1].end.x, graph.content.height),
     ))
     path.parts.push(new Segment(
       path.parts[path.parts.length - 1].end,
-      new Point(path.parts[path.parts.length - 1].end.x, chart.content.height),
+      new Point(path.parts[path.parts.length - 1].end.x, graph.content.height),
     ))
 
     this.shape = path
     this.style = Style.from({
       fill: {
-        positions: [0, 0, 0, chart.content.height],
+        positions: [0, 0, 0, graph.content.height],
         stops: [
           [0.0, colors.pathStroke + '11'],
           [0.6, colors.pathStroke + '11'],
@@ -139,7 +143,7 @@ class PathAreaNode extends Node {
   }
 }
 
-export class LinearChart extends chart.Graph {
+export class LinearChart extends Graph {
   content: Box
   dataset: Dataset
   scale: {

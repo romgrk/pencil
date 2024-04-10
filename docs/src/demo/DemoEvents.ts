@@ -1,10 +1,6 @@
 import { Circle } from '2d-geometry'
-import { Graph } from '../graph/Graph'
-import { Container } from '../graph/Container'
-import { Node } from '../graph/Node'
-import { Style } from '../graph/Style'
-import { Animation } from '../graph/animate'
-import * as elements from '../graph/elements'
+import { Graph, Container, Node, Style, Animation } from 'pencil'
+import * as elements from 'pencil/elements'
 
 export class DemoEvents extends Graph {
   constructor(domNode: any, options: any) {
