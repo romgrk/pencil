@@ -74,7 +74,7 @@ const tabs = [
       <>
         <p>
           This demo shows event handling. Each small circle has events for pointerover, pointerout,
-          pointerup, pointerdown, pointerclick and drag. The big circle has pointerend and pointerleave events.
+          pointerup, pointerdown, pointerclick and drag. The big circle has pointerenter and pointerleave events.
         </p>
         <GraphContainer
           type={DemoEvents}
