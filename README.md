@@ -27,13 +27,9 @@ const newGraph = new CustomGraph(document.querySelector('canvas'))
 
 This library is a thin visualization layer on top of [2d-geometry](https://github.com/romgrk/2d-geometry), which provides powerful mathematical primitives. `Node` elements are one mathematical primitive with one `Style`, grouped under `Container` elements. The API is inspired & copied from PixiJS when possible.
 
-## Example
+## Examples
 
-Apologies for the low-quality GIF, but it can hopefully demonstrate how powerful the primitives are. This runs at 60fps with sharp rendering when not compressed through GIF.
-
-![demo](https://github.com/romgrk/pencil/assets/1423607/f07fb1d6-afb5-4036-9518-584a95dcbd2f)
-
-This example is implemented in [65 lines](https://github.com/romgrk/pencil/blob/master/src/demo/Pencil.ts).
+[Live examples](https://pencil-docs.netlify.app/examples)
 
 ## License
 
