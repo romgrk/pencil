@@ -117,7 +117,7 @@ export class Pencil {
       }
       case ShapeTag.Arc: {
         const s = shape as Arc
-        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, !s.clockwise)
         break
       }
       case ShapeTag.Quadratic: {
@@ -193,7 +193,7 @@ function drawPath(p: Path2D, shape: Polygon | Path) {
       }
       case ShapeTag.Arc: {
         const s = shape as Arc
-        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, s.counterClockwise)
+        p.ellipse(s.pc.x, s.pc.y, s.r, s.r, 0, s.startAngle, s.endAngle, !s.clockwise)
         break
       }
       case ShapeTag.Quadratic: {

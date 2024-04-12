@@ -1,10 +1,9 @@
 import { GraphContainer } from 'pencil'
-// import { Debug } from './demo/Debug'
+import { Debug } from '../demo/Debug'
 // import { PencilAnimation } from './demo/PencilAnimation'
 // import { LinearChart } from './demo/LinearChart'
 // import { DemoEvents } from './demo/DemoEvents'
 // import DemoStressTestKonva from './demo/DemoStressTestKonva'
-import { PathEditor } from '../demo/PathEditor'
 
 
 export default function Index() {
@@ -20,9 +19,9 @@ export default function Index() {
       }
       {
         <GraphContainer
-          type={PathEditor}
+          type={Debug}
           width={800}
-          height={500}
+          height={800}
         />
       }
       {

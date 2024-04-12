@@ -14,6 +14,7 @@ export default function Index() {
       />
 
       <Link to='/examples'>Examples</Link>
+      <Link to='/debug'>Debug</Link>
     </div>
   )
 }

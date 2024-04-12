@@ -93,15 +93,15 @@ export class PathEditor extends Graph {
       const dt = ta - tb
       const v = new Vector(ta - dt / 2)
       const length = Math.min(part.length / 4, next.length / 4)
-      const pa = part.end.translate(v.rotate90CCW().multiply(length))
-      const pb = part.end.translate(v.rotate90CW().multiply(length))
+      const pa = part.end.translate(v.rotate90CW().multiply(length))
+      const pb = part.end.translate(v.rotate90CCW().multiply(length))
       part.control2 = pa
       next.control1 = pb
     }
     newParts[0].control1 =
       newParts[0].start.translate(
         newParts[0].control2.distanceTo(newParts[0].end)[1].vector
-          .rotate90CW()
+          .rotate90CCW()
           .normalize()
           .multiply(newParts[0].control2.distanceTo(newParts[0].end)[0])
       )
